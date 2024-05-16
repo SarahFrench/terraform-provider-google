@@ -3,6 +3,9 @@
 addReviewers: true # add reviewers to pull requests
 
 addAssignees: true # add assignees to pull requests
+assignees:
+  - SarahFrench
+numberOfAssignees: 1
 
 # A list of reviewers to be added to pull requests (GitHub user name)
 reviewers:
