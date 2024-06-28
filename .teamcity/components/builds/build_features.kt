@@ -15,7 +15,7 @@ import jetbrains.buildServer.configs.kotlin.buildFeatures.GolangFeature
 // See the class's documentation: https://teamcity.jetbrains.com/app/dsl-documentation/root/build-feature/index.html
 
 
-const val UseTeamCityGoTest = false
+const val UseTeamCityGoTest = true
 
 fun BuildFeatures.golang() {
     if (UseTeamCityGoTest) {
