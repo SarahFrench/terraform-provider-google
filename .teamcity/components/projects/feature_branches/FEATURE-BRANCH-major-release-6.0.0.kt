@@ -40,7 +40,9 @@ object HashicorpVCSRootBeta_featureBranchMajorRelease600: GitVcsRoot({
 fun featureBranchMajorRelease600_Project(allConfig: AllContextParameters): Project {
 
     val projectId = replaceCharsId(branchName)
-
+    val gaProjectId = replaceCharsId(branchName + "_GA")
+    val betaProjectId= replaceCharsId(branchName + "_BETA")
+    
     // Get config for using the GA and VCR identities
     val gaConfig = getGaAcceptanceTestConfig(allConfig)
     val betaConfig = getBetaAcceptanceTestConfig(allConfig)
@@ -55,10 +57,10 @@ fun featureBranchMajorRelease600_Project(allConfig: AllContextParameters): Proje
         vcsRoot(HashicorpVCSRootBeta_featureBranchMajorRelease600)
 
         // Nested Nightly Test project that uses hashicorp/terraform-provider-google
-        subProject(nightlyTests(projectId, ProviderNameGa, HashicorpVCSRootGa_featureBranchMajorRelease600, gaConfig, null))
+        subProject(nightlyTests(gaProjectId, ProviderNameGa, HashicorpVCSRootGa_featureBranchMajorRelease600, gaConfig, null))
 
         // Nested Nightly Test project that uses hashicorp/terraform-provider-google-beta
-        subProject(nightlyTests(projectId, ProviderNameBeta, HashicorpVCSRootBeta_featureBranchMajorRelease600, betaConfig, null))
+        subProject(nightlyTests(betaProjectId, ProviderNameBeta, HashicorpVCSRootBeta_featureBranchMajorRelease600, betaConfig, null))
 
 
         params {
