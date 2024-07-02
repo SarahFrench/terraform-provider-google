@@ -20,7 +20,7 @@ import jetbrains.buildServer.configs.kotlin.Project
 import jetbrains.buildServer.configs.kotlin.vcs.GitVcsRoot
 import replaceCharsId
 
-fun nightlyTests(parentProject:String, providerName: String, vcsRoot: GitVcsRoot, config: AccTestConfiguration): Project {
+fun nightlyTests(parentProject:String, providerName: String, vcsRoot: GitVcsRoot, config: AccTestConfiguration, overrideCronTrigger: NightlyTriggerConfiguration? ): Project {
 
     // Create unique ID for the dynamically-created project
     var projectId = "${parentProject}_${NightlyTestsProjectId}"
@@ -38,7 +38,11 @@ fun nightlyTests(parentProject:String, providerName: String, vcsRoot: GitVcsRoot
     // Create build configs to run acceptance tests for each package defined in packages.kt and services.kt files
     val allPackages = getAllPackageInProviderVersion(providerName)
     val packageBuildConfigs = BuildConfigurationsForPackages(allPackages, providerName, projectId, vcsRoot, sharedResources, config)
-    val accTestTrigger  = NightlyTriggerConfiguration()
+
+    var accTestTrigger  = NightlyTriggerConfiguration()
+    if (overrideCronTrigger != null) {
+        accTestTrigger = overrideCronTrigger
+    }
     packageBuildConfigs.forEach { buildConfiguration ->
         buildConfiguration.addTrigger(accTestTrigger)
     }
@@ -51,7 +55,9 @@ fun nightlyTests(parentProject:String, providerName: String, vcsRoot: GitVcsRoot
         else -> throw Exception("Provider name not supplied when generating a nightly test subproject")
     }
     val serviceSweeperConfig = BuildConfigurationForServiceSweeper(providerName, ServiceSweeperName, sweepersList, projectId, vcsRoot, sharedResources, config)
-    val sweeperTrigger  = NightlyTriggerConfiguration(startHour=11)  // Override hour
+
+    val sweeperHour = accTestTrigger.startHour + 5
+    val sweeperTrigger  = NightlyTriggerConfiguration(startHour = sweeperHour)  // Override hour to be after package test builds are triggered
     serviceSweeperConfig.addTrigger(sweeperTrigger)
 
     return Project {
