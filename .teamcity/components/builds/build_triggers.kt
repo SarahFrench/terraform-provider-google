@@ -18,10 +18,22 @@ import jetbrains.buildServer.configs.kotlin.triggers.schedule
 class NightlyTriggerConfiguration(
     val branch: String = DefaultBranchName,
     val nightlyTestsEnabled: Boolean = true,
-    val startHour: Int = DefaultStartHour,
+    var startHour: Int = DefaultStartHour,
     val daysOfWeek: String = DefaultDaysOfWeek,
-    val daysOfMonth: String = DefaultDaysOfMonth
-)
+    val daysOfMonth: String = DefaultDaysOfMonth){
+
+    public fun clone(): NightlyTriggerConfiguration{
+        return NightlyTriggerConfiguration(
+            this.branch,
+            this.nightlyTestsEnabled,
+            this.startHour,
+            this.daysOfWeek,
+            this.daysOfMonth
+        )
+    }
+}
+
+
 
 fun Triggers.runNightly(config: NightlyTriggerConfiguration) {
 

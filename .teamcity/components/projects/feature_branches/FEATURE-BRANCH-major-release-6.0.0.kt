@@ -14,6 +14,7 @@ import generated.PackagesListBeta
 import generated.PackagesListGa
 import jetbrains.buildServer.configs.kotlin.Project
 import jetbrains.buildServer.configs.kotlin.vcs.GitVcsRoot
+import projects.reused.ReusableProjectInputs
 import projects.reused.nightlyTests
 import replaceCharsId
 import vcs_roots.HashiCorpVCSRootGa
@@ -42,10 +43,27 @@ fun featureBranchMajorRelease600_Project(allConfig: AllContextParameters): Proje
     val projectId = replaceCharsId(branchName)
     val gaProjectId = replaceCharsId(branchName + "_GA")
     val betaProjectId= replaceCharsId(branchName + "_BETA")
-    
+
     // Get config for using the GA and VCR identities
     val gaConfig = getGaAcceptanceTestConfig(allConfig)
     val betaConfig = getBetaAcceptanceTestConfig(allConfig)
+
+    val gaProjectInputs = ReusableProjectInputs(
+        parentProject = gaProjectId,
+        providerName = ProviderNameGa,
+        vcsRoot = HashicorpVCSRootGa_featureBranchMajorRelease600,
+        config= gaConfig,
+        cron= NightlyTriggerConfiguration(),
+        projectName = "Nightly Tests (GA)"
+    )
+    val betaProjectInputs = ReusableProjectInputs(
+        parentProject = betaProjectId,
+        providerName = ProviderNameBeta,
+        vcsRoot = HashicorpVCSRootBeta_featureBranchMajorRelease600,
+        config= betaConfig,
+        cron= NightlyTriggerConfiguration(),
+        projectName = "Nightly Tests (Beta)"
+    )
 
     return Project{
         id(projectId)
@@ -57,10 +75,10 @@ fun featureBranchMajorRelease600_Project(allConfig: AllContextParameters): Proje
         vcsRoot(HashicorpVCSRootBeta_featureBranchMajorRelease600)
 
         // Nested Nightly Test project that uses hashicorp/terraform-provider-google
-        subProject(nightlyTests(gaProjectId, ProviderNameGa, HashicorpVCSRootGa_featureBranchMajorRelease600, gaConfig, null))
+        subProject(nightlyTests(gaProjectInputs))
 
         // Nested Nightly Test project that uses hashicorp/terraform-provider-google-beta
-        subProject(nightlyTests(betaProjectId, ProviderNameBeta, HashicorpVCSRootBeta_featureBranchMajorRelease600, betaConfig, null))
+        subProject(nightlyTests(betaProjectInputs))
 
 
         params {

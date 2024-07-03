@@ -20,50 +20,58 @@ import jetbrains.buildServer.configs.kotlin.Project
 import jetbrains.buildServer.configs.kotlin.vcs.GitVcsRoot
 import replaceCharsId
 
-fun nightlyTests(parentProject:String, providerName: String, vcsRoot: GitVcsRoot, config: AccTestConfiguration, overrideCronTrigger: NightlyTriggerConfiguration? ): Project {
+open class ReusableProjectInputs(
+    open val parentProject: String,
+    open val providerName: String,
+    open val vcsRoot: GitVcsRoot,
+    open val config: AccTestConfiguration,
+    open val cron: NightlyTriggerConfiguration,
+    open val projectName: String
+)
+
+fun nightlyTests(input: ReusableProjectInputs): Project {
 
     // Create unique ID for the dynamically-created project
-    var projectId = "${parentProject}_${NightlyTestsProjectId}"
+    var projectId = "${input.parentProject}_${NightlyTestsProjectId}"
     projectId = replaceCharsId(projectId)
 
     // Nightly test projects run all acceptance tests overnight
     // Here we ensure the project uses the appropriate Shared Resource to ensure no clashes between builds and/or sweepers
     var sharedResources: ArrayList<String>
-    when(providerName) {
+    when(input.providerName) {
         ProviderNameGa -> sharedResources = arrayListOf(SharedResourceNameGa)
         ProviderNameBeta -> sharedResources = arrayListOf(SharedResourceNameBeta)
         else -> throw Exception("Provider name not supplied when generating a nightly test subproject")
     }
 
     // Create build configs to run acceptance tests for each package defined in packages.kt and services.kt files
-    val allPackages = getAllPackageInProviderVersion(providerName)
-    val packageBuildConfigs = BuildConfigurationsForPackages(allPackages, providerName, projectId, vcsRoot, sharedResources, config)
+    val allPackages = getAllPackageInProviderVersion(input.providerName)
+    val packageBuildConfigs = BuildConfigurationsForPackages(allPackages, input.providerName, projectId, input.vcsRoot, sharedResources, input.config)
 
-    var accTestTrigger  = NightlyTriggerConfiguration()
-    if (overrideCronTrigger != null) {
-        accTestTrigger = overrideCronTrigger
-    }
+    // Add cron trigger to build configs for service packages
     packageBuildConfigs.forEach { buildConfiguration ->
-        buildConfiguration.addTrigger(accTestTrigger)
+        buildConfiguration.addTrigger(input.cron)
     }
 
     // Create build config for sweeping the nightly test project
     var sweepersList: Map<String,Map<String,String>>
-    when(providerName) {
+    when(input.providerName) {
         ProviderNameGa -> sweepersList = SweepersListGa
         ProviderNameBeta -> sweepersList = SweepersListBeta
         else -> throw Exception("Provider name not supplied when generating a nightly test subproject")
     }
-    val serviceSweeperConfig = BuildConfigurationForServiceSweeper(providerName, ServiceSweeperName, sweepersList, projectId, vcsRoot, sharedResources, config)
+    val serviceSweeperConfig = BuildConfigurationForServiceSweeper(input.providerName, ServiceSweeperName, sweepersList, projectId, input.vcsRoot, sharedResources, input.config)
 
-    val sweeperHour = accTestTrigger.startHour + 5
-    val sweeperTrigger  = NightlyTriggerConfiguration(startHour = sweeperHour)  // Override hour to be after package test builds are triggered
+    // Add cron trigger to build config for service sweeper
+    // Trigger must be scheduled after the service package builds
+    val sweeperTrigger  = input.cron.clone()
+    sweeperTrigger.startHour += 5
     serviceSweeperConfig.addTrigger(sweeperTrigger)
 
     return Project {
         id(projectId)
-        name = "Nightly Tests"
-        description = "A project connected to the hashicorp/terraform-provider-${providerName} repository, where scheduled nightly tests run and users can trigger ad-hoc builds"
+        name = input.projectName // Typically "Nightly Tests", but may take other values to ensure unique names within a project
+        description = "A project connected to the hashicorp/terraform-provider-${input.providerName} repository, where scheduled nightly tests run and users can trigger ad-hoc builds"
 
         // Register build configs in the project
         packageBuildConfigs.forEach { buildConfiguration ->
@@ -72,7 +80,7 @@ fun nightlyTests(parentProject:String, providerName: String, vcsRoot: GitVcsRoot
         buildType(serviceSweeperConfig)
 
         params{
-            configureGoogleSpecificTestParameters(config)
+            configureGoogleSpecificTestParameters(input.config)
         }
     }
 }

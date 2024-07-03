@@ -46,7 +46,7 @@ class BuildConfigurationFeatureTests {
                 }
             }
             if (exists.contains(false) && UseTeamCityGoTest){
-                fail("Project ${p.name} contains build configurations that don't use the Go Test feature")
+                fail("Project ${p.id} ${p.name} contains build configurations that don't use the Go Test feature")
             }
         }
     }

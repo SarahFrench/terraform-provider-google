@@ -25,36 +25,55 @@ import jetbrains.buildServer.configs.kotlin.Project
 import jetbrains.buildServer.configs.kotlin.vcs.GitVcsRoot
 import replaceCharsId
 
-fun mmUpstream(parentProject: String, providerName: String, vcsRoot: GitVcsRoot, cronSweeperVcsRoot: GitVcsRoot, config: AccTestConfiguration): Project {
+// MMUpstreamProjectInputs extends ReusableProjectInputs by adding the ability to
+// pass in a second vcs root.
+class MMUpstreamProjectInputs// Nullable inputs
+    (
+    override val parentProject: String,
+    override val providerName: String,
+    override val vcsRoot: GitVcsRoot,
+    override val config: AccTestConfiguration,
+    override val cron: NightlyTriggerConfiguration,
+    override val projectName: String?,
+    // This root is used to make the scheduled sweeping of the VCR project use the
+    // downstream repo's code instead of the modular-magician fork.
+    val cronSweeperVcsRoot: GitVcsRoot
+
+    ) : ReusableProjectInputs(parentProject, providerName, vcsRoot, config, cron, projectName) {
+}
+
+fun mmUpstream(input: MMUpstreamProjectInputs): Project {
+
+//    parentProject: String, providerName: String, vcsRoot: GitVcsRoot, cronSweeperVcsRoot: GitVcsRoot, config: AccTestConfiguration
 
     // Create unique ID for the dynamically-created project
-    var projectId = "${parentProject}_${MMUpstreamProjectId}"
+    var projectId = "${input.parentProject}_${MMUpstreamProjectId}"
     projectId = replaceCharsId(projectId)
 
     // Shared resource allows ad hoc builds and sweeper builds to not clash
     var sharedResources: List<String> = listOf(SharedResourceNameVcr)
 
     // Create build configs for each package defined in packages.kt and services_ga.kt/services_beta.kt files
-    val allPackages = getAllPackageInProviderVersion(providerName)
-    val packageBuildConfigs = BuildConfigurationsForPackages(allPackages, providerName, projectId, vcsRoot, sharedResources, config)
+    val allPackages = getAllPackageInProviderVersion(input.providerName)
+    val packageBuildConfigs = BuildConfigurationsForPackages(allPackages, input.providerName, projectId, input.vcsRoot, sharedResources, input.config)
 
     // Create build config for sweeping the VCR test project - everything except projects
     var sweepersList: Map<String,Map<String,String>>
-    when(providerName) {
+    when(input.providerName) {
         ProviderNameGa -> sweepersList = SweepersListGa
         ProviderNameBeta -> sweepersList = SweepersListBeta
         else -> throw Exception("Provider name not supplied when generating a nightly test subproject")
     }
-    val serviceSweeperManualConfig = BuildConfigurationForServiceSweeper(providerName, ServiceSweeperManualName, sweepersList, projectId, vcsRoot, sharedResources, config)
+    val serviceSweeperManualConfig = BuildConfigurationForServiceSweeper(input.providerName, ServiceSweeperManualName, sweepersList, projectId, input.vcsRoot, sharedResources, input.config)
 
-    val serviceSweeperCronConfig = BuildConfigurationForServiceSweeper(providerName, ServiceSweeperCronName, sweepersList, projectId, cronSweeperVcsRoot, sharedResources, config)
-    val trigger  = NightlyTriggerConfiguration(startHour=12)
+    val serviceSweeperCronConfig = BuildConfigurationForServiceSweeper(input.providerName, ServiceSweeperCronName, sweepersList, projectId, input.cronSweeperVcsRoot, sharedResources, input.config)
+    val trigger  = input.cron
     serviceSweeperCronConfig.addTrigger(trigger) // Only the sweeper is on a schedule in this project
 
     return Project {
         id(projectId)
-        name = "Upstream MM Testing"
-        description = "A project connected to the modular-magician/terraform-provider-${providerName} repository, to let users trigger ad-hoc builds against branches for PRs"
+        name = (if (input.projectName != null) input.projectName!! else "Upstream MM Testing")
+        description = "A project connected to the modular-magician/terraform-provider-${input.providerName} repository, to let users trigger ad-hoc builds against branches for PRs"
 
         // Register build configs in the project
         packageBuildConfigs.forEach { buildConfiguration: BuildType ->
@@ -64,7 +83,7 @@ fun mmUpstream(parentProject: String, providerName: String, vcsRoot: GitVcsRoot,
         buildType(serviceSweeperCronConfig)
 
         params{
-            configureGoogleSpecificTestParameters(config)
+            configureGoogleSpecificTestParameters(input.config)
         }
     }
 }

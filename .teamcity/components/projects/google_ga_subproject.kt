@@ -8,11 +8,10 @@
 package projects
 
 import ProviderNameGa
-import builds.AllContextParameters
-import builds.getGaAcceptanceTestConfig
-import builds.getVcrAcceptanceTestConfig
-import builds.readOnlySettings
+import builds.*
 import jetbrains.buildServer.configs.kotlin.Project
+import projects.feature_branches.HashicorpVCSRootGa_featureBranchMajorRelease600
+import projects.reused.ReusableProjectInputs
 import projects.reused.mmUpstream
 import projects.reused.nightlyTests
 import replaceCharsId
@@ -28,13 +27,22 @@ fun googleSubProjectGa(allConfig: AllContextParameters): Project {
     val gaConfig = getGaAcceptanceTestConfig(allConfig)
     val vcrConfig = getVcrAcceptanceTestConfig(allConfig)
 
+    val projectInputs = ReusableProjectInputs(
+        parentProject = gaId,
+        providerName = ProviderNameGa,
+        vcsRoot = HashiCorpVCSRootGa,
+        config= gaConfig,
+        cron= NightlyTriggerConfiguration(),
+        projectName = "Nightly Tests"
+    )
+
     return Project{
         id(gaId)
         name = "Google"
         description = "Subproject containing builds for testing the GA version of the Google provider"
 
         // Nightly Test project that uses hashicorp/terraform-provider-google
-        subProject(nightlyTests(gaId, ProviderNameGa, HashiCorpVCSRootGa, gaConfig, null))
+        subProject(nightlyTests(projectInputs))
 
         // MM Upstream project that uses modular-magician/terraform-provider-google
         subProject(mmUpstream(gaId, ProviderNameGa, ModularMagicianVCSRootGa, HashiCorpVCSRootGa, vcrConfig))
