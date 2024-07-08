@@ -92,7 +92,7 @@ data "google_compute_network" "target-vm" {
 
 data "google_compute_image" "vmimage" {
   provider = google-beta
-  family  = "debian-12"
+  family  = "debian-10"
   project = "debian-cloud"
 }
 
