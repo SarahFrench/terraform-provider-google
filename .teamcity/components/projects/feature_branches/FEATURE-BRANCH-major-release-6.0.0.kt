@@ -64,7 +64,7 @@ fun featureBranchMajorRelease600_Project(allConfig: AllContextParameters): Proje
                         gaConfig,
                         NightlyTriggerConfiguration(
                             branch = branchName,
-                            daysOfWeek = "5" // Thursday for GA, TeamCity numbers days Sun=1...Sat=7
+                            // daysOfWeek = "5" // Thursday for GA, TeamCity numbers days Sun=1...Sat=7
                         ), 
                     )
                 )
@@ -84,7 +84,7 @@ fun featureBranchMajorRelease600_Project(allConfig: AllContextParameters): Proje
                         betaConfig,
                         NightlyTriggerConfiguration(
                             branch = branchName,
-                            daysOfWeek="6" // Friday for Beta, TeamCity numbers days Sun=1...Sat=7
+                            // daysOfWeek="6" // Friday for Beta, TeamCity numbers days Sun=1...Sat=7
                         ),
                     )
                 )
