@@ -14,25 +14,27 @@ import jetbrains.buildServer.configs.kotlin.Project
 import jetbrains.buildServer.configs.kotlin.vcs.GitVcsRoot
 import projects.reused.nightlyTests
 import replaceCharsId
+import vcs_roots.ModularMagicianVCSRootGa
+import vcs_roots.ModularMagicianVCSRootBeta
 
 const val branchName = "FEATURE-BRANCH-major-release-6.0.0"
 
 
 // VCS Roots specifically for pulling code from the feature branches in the downstream repos
 
-object HashicorpVCSRootGa_featureBranchMajorRelease600: GitVcsRoot({
-    name = "VCS root for the hashicorp/terraform-provider-${ProviderNameGa} repo @ refs/heads/${branchName}"
-    url = "https://github.com/hashicorp/terraform-provider-${ProviderNameGa}"
-    branch = "refs/heads/${branchName}"
-    branchSpec = "" // empty as we'll access no other branches
-})
+// object HashicorpVCSRootGa_featureBranchMajorRelease600: GitVcsRoot({
+//     name = "VCS root for the hashicorp/terraform-provider-${ProviderNameGa} repo @ refs/heads/${branchName}"
+//     url = "https://github.com/hashicorp/terraform-provider-${ProviderNameGa}"
+//     branch = "refs/heads/${branchName}"
+//     branchSpec = "" // empty as we'll access no other branches
+// })
 
-object HashicorpVCSRootBeta_featureBranchMajorRelease600: GitVcsRoot({
-    name = "VCS root for the hashicorp/terraform-provider-${ProviderNameBeta} repo @ refs/heads/${branchName}"
-    url = "https://github.com/hashicorp/terraform-provider-${ProviderNameBeta}"
-    branch = "refs/heads/${branchName}"
-    branchSpec = "" // empty as we'll access no other branches
-})
+// object HashicorpVCSRootBeta_featureBranchMajorRelease600: GitVcsRoot({
+//     name = "VCS root for the hashicorp/terraform-provider-${ProviderNameBeta} repo @ refs/heads/${branchName}"
+//     url = "https://github.com/hashicorp/terraform-provider-${ProviderNameBeta}"
+//     branch = "refs/heads/${branchName}"
+//     branchSpec = "" // empty as we'll access no other branches
+// })
 
 fun featureBranchMajorRelease600_Project(allConfig: AllContextParameters): Project {
 
@@ -62,9 +64,12 @@ fun featureBranchMajorRelease600_Project(allConfig: AllContextParameters): Proje
                     nightlyTests(
                         gaProjectId,
                         ProviderNameGa,
-                        HashicorpVCSRootGa_featureBranchMajorRelease600,
+                        ModularMagicianVCSRootGa,
                         gaConfig,
-                        NightlyTriggerConfiguration(daysOfWeek="5"), // Thursday for GA, TeamCity numbers days Sun=1...Sat=7
+                        NightlyTriggerConfiguration(
+                            branch = branchName,
+                            daysOfWeek = "5" // Thursday for GA, TeamCity numbers days Sun=1...Sat=7
+                        ), 
                     )
                 )
             }
@@ -79,9 +84,12 @@ fun featureBranchMajorRelease600_Project(allConfig: AllContextParameters): Proje
                     nightlyTests(
                         betaProjectId,
                         ProviderNameBeta,
-                        HashicorpVCSRootBeta_featureBranchMajorRelease600,
+                        ModularMagicianVCSRootBeta,
                         betaConfig,
-                        NightlyTriggerConfiguration(daysOfWeek="6"), // Friday for Beta, TeamCity numbers days Sun=1...Sat=7
+                        NightlyTriggerConfiguration(
+                            branch = branchName,
+                            daysOfWeek="6" // Friday for Beta, TeamCity numbers days Sun=1...Sat=7
+                        ),
                     )
                 )
             }
