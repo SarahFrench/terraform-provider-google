@@ -51,10 +51,6 @@ fun featureBranchMajorRelease600_Project(allConfig: AllContextParameters): Proje
         name = "6.0.0 Major Release Testing"
         description = "Subproject for testing feature branch $branchName"
 
-        // Register feature branch-specific VCS roots in the project
-        vcsRoot(HashicorpVCSRootGa_featureBranchMajorRelease600)
-        vcsRoot(HashicorpVCSRootBeta_featureBranchMajorRelease600)
-
         // Nested Nightly Test project that uses hashicorp/terraform-provider-google
         subProject(
             Project{
