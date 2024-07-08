@@ -14,27 +14,31 @@ import jetbrains.buildServer.configs.kotlin.Project
 import jetbrains.buildServer.configs.kotlin.vcs.GitVcsRoot
 import projects.reused.nightlyTests
 import replaceCharsId
-import vcs_roots.ModularMagicianVCSRootGa
-import vcs_roots.ModularMagicianVCSRootBeta
+// import vcs_roots.HashiCorpVCSRootGa
+// import vcs_roots.HashiCorpVCSRootBeta
 
 const val branchName = "FEATURE-BRANCH-major-release-6.0.0"
 
 
 // VCS Roots specifically for pulling code from the feature branches in the downstream repos
 
-// object HashicorpVCSRootGa_featureBranchMajorRelease600: GitVcsRoot({
-//     name = "VCS root for the hashicorp/terraform-provider-${ProviderNameGa} repo @ refs/heads/${branchName}"
-//     url = "https://github.com/hashicorp/terraform-provider-${ProviderNameGa}"
-//     branch = "refs/heads/${branchName}"
-//     branchSpec = "" // empty as we'll access no other branches
-// })
+object HashicorpVCSRootGa_featureBranchMajorRelease600: GitVcsRoot({
+    name = "VCS root for the hashicorp/terraform-provider-${ProviderNameGa} repo @ refs/heads/${branchName}"
+    url = "https://github.com/hashicorp/terraform-provider-${ProviderNameGa}"
+    branch = "refs/heads/${branchName}"
+    branchSpec = """
+        +:FEATURE-BRANCH-major-release-6*
+    """.trimIndent()
+})
 
-// object HashicorpVCSRootBeta_featureBranchMajorRelease600: GitVcsRoot({
-//     name = "VCS root for the hashicorp/terraform-provider-${ProviderNameBeta} repo @ refs/heads/${branchName}"
-//     url = "https://github.com/hashicorp/terraform-provider-${ProviderNameBeta}"
-//     branch = "refs/heads/${branchName}"
-//     branchSpec = "" // empty as we'll access no other branches
-// })
+object HashicorpVCSRootBeta_featureBranchMajorRelease600: GitVcsRoot({
+    name = "VCS root for the hashicorp/terraform-provider-${ProviderNameBeta} repo @ refs/heads/${branchName}"
+    url = "https://github.com/hashicorp/terraform-provider-${ProviderNameBeta}"
+    branch = "refs/heads/${branchName}"
+    branchSpec = """
+        +:FEATURE-BRANCH-major-release-6*
+    """.trimIndent()
+})
 
 fun featureBranchMajorRelease600_Project(allConfig: AllContextParameters): Project {
 
@@ -51,6 +55,10 @@ fun featureBranchMajorRelease600_Project(allConfig: AllContextParameters): Proje
         name = "6.0.0 Major Release Testing"
         description = "Subproject for testing feature branch $branchName"
 
+        // Register feature branch-specific VCS roots in the project
+        vcsRoot(HashicorpVCSRootGa_featureBranchMajorRelease600)
+        vcsRoot(HashicorpVCSRootBeta_featureBranchMajorRelease600)
+
         // Nested Nightly Test project that uses hashicorp/terraform-provider-google
         subProject(
             Project{
@@ -60,7 +68,7 @@ fun featureBranchMajorRelease600_Project(allConfig: AllContextParameters): Proje
                     nightlyTests(
                         gaProjectId,
                         ProviderNameGa,
-                        ModularMagicianVCSRootGa,
+                        HashicorpVCSRootGa_featureBranchMajorRelease600,
                         gaConfig,
                         NightlyTriggerConfiguration(
                             branch = branchName,
@@ -80,7 +88,7 @@ fun featureBranchMajorRelease600_Project(allConfig: AllContextParameters): Proje
                     nightlyTests(
                         betaProjectId,
                         ProviderNameBeta,
-                        ModularMagicianVCSRootBeta,
+                        HashicorpVCSRootBeta_featureBranchMajorRelease600,
                         betaConfig,
                         NightlyTriggerConfiguration(
                             branch = branchName,
