@@ -36,7 +36,7 @@ class NightlyTriggerConfiguration(
 fun Triggers.runNightly(config: NightlyTriggerConfiguration) {
 
     schedule{
-        enabled = config.nightlyTestsEnabled
+        enabled = false
         branchFilter = "+:" + config.branch // returns "+:/refs/heads/main" if default
         triggerBuild = always() // Run build even if no new commits/pending changes
         withPendingChangesOnly = false
