@@ -14,11 +14,8 @@ import jetbrains.buildServer.configs.kotlin.Project
 import jetbrains.buildServer.configs.kotlin.vcs.GitVcsRoot
 import projects.reused.nightlyTests
 import replaceCharsId
-// import vcs_roots.HashiCorpVCSRootGa
-// import vcs_roots.HashiCorpVCSRootBeta
 
 const val branchName = "FEATURE-BRANCH-major-release-6.0.0"
-
 
 // VCS Roots specifically for pulling code from the feature branches in the downstream repos
 
@@ -27,7 +24,7 @@ object HashicorpVCSRootGa_featureBranchMajorRelease600: GitVcsRoot({
     url = "https://github.com/hashicorp/terraform-provider-${ProviderNameGa}"
     branch = "refs/heads/${branchName}"
     branchSpec = """
-        +:FEATURE-BRANCH-major-release-6*
+        +:refs/heads/FEATURE-BRANCH-major-release-6*
     """.trimIndent()
 })
 
@@ -36,7 +33,7 @@ object HashicorpVCSRootBeta_featureBranchMajorRelease600: GitVcsRoot({
     url = "https://github.com/hashicorp/terraform-provider-${ProviderNameBeta}"
     branch = "refs/heads/${branchName}"
     branchSpec = """
-        +:FEATURE-BRANCH-major-release-6*
+        +:refs/heads/FEATURE-BRANCH-major-release-6*
     """.trimIndent()
 })
 
@@ -71,8 +68,8 @@ fun featureBranchMajorRelease600_Project(allConfig: AllContextParameters): Proje
                         HashicorpVCSRootGa_featureBranchMajorRelease600,
                         gaConfig,
                         NightlyTriggerConfiguration(
-                            branch = branchName,
-                            daysOfWeek = "5" // Thursday for GA, TeamCity numbers days Sun=1...Sat=7
+                            branch = "refs/heads/${branchName}", // Make triggered builds use the feature branch
+                            daysOfWeek = "5"     // Thursday for GA, TeamCity numbers days Sun=1...Sat=7
                         ), 
                     )
                 )
@@ -91,8 +88,8 @@ fun featureBranchMajorRelease600_Project(allConfig: AllContextParameters): Proje
                         HashicorpVCSRootBeta_featureBranchMajorRelease600,
                         betaConfig,
                         NightlyTriggerConfiguration(
-                            branch = branchName,
-                            daysOfWeek="6" // Friday for Beta, TeamCity numbers days Sun=1...Sat=7
+                            branch = "refs/heads/${branchName}", // Make triggered builds use the feature branch
+                            daysOfWeek="6"       // Friday for Beta, TeamCity numbers days Sun=1...Sat=7
                         ),
                     )
                 )
