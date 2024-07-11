@@ -70,8 +70,8 @@ fun featureBranchMajorRelease600_Project(allConfig: AllContextParameters): Proje
                         HashicorpVCSRootGa_featureBranchMajorRelease600,
                         gaConfig,
                         NightlyTriggerConfiguration(
-                            branchFilter = "refs/heads/${branchName}", // Filter the branches available on the VCS root
-                            daysOfWeek =   "5"                         // Thursday for GA, TeamCity numbers days Sun=1...Sat=7
+                            branch = "refs/heads/${branchName}", // Make triggered builds use the feature branch
+                            daysOfWeek = "5"     // Thursday for GA, TeamCity numbers days Sun=1...Sat=7
                         ), 
                     )
                 )
@@ -90,8 +90,8 @@ fun featureBranchMajorRelease600_Project(allConfig: AllContextParameters): Proje
                         HashicorpVCSRootBeta_featureBranchMajorRelease600,
                         betaConfig,
                         NightlyTriggerConfiguration(
-                            branchFilter = "refs/heads/${branchName}", // Filter the branches available on the VCS root
-                            daysOfWeek="6"                             // Friday for Beta, TeamCity numbers days Sun=1...Sat=7
+                            branch = "refs/heads/${branchName}", // Make triggered builds use the feature branch
+                            daysOfWeek="6"       // Friday for Beta, TeamCity numbers days Sun=1...Sat=7
                         ),
                     )
                 )
