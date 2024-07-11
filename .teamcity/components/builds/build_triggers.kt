@@ -16,7 +16,7 @@ import jetbrains.buildServer.configs.kotlin.Triggers
 import jetbrains.buildServer.configs.kotlin.triggers.schedule
 
 class NightlyTriggerConfiguration(
-    val branch: String = DefaultBranchName,
+    val branchFilter: String = DefaultBranchName,
     val nightlyTestsEnabled: Boolean = true,
     var startHour: Int = DefaultStartHour,
     var daysOfWeek: String = DefaultDaysOfWeek,
@@ -24,7 +24,7 @@ class NightlyTriggerConfiguration(
 ){
     fun clone(): NightlyTriggerConfiguration{
         return NightlyTriggerConfiguration(
-            this.branch,
+            this.branchFilter,
             this.nightlyTestsEnabled,
             this.startHour,
             this.daysOfWeek,
@@ -36,19 +36,18 @@ class NightlyTriggerConfiguration(
 fun Triggers.runNightly(config: NightlyTriggerConfiguration) {
 
     schedule{
-        enabled = false
-        branchFilter = "+:" + config.branch // returns "+:/refs/heads/main" if default
+        enabled = config.nightlyTestsEnabled
+        branchFilter = "+:" + config.branchFilter // returns "+:/refs/heads/main" if default
         triggerBuild = always() // Run build even if no new commits/pending changes
         withPendingChangesOnly = false
         enforceCleanCheckout = true
 
         schedulingPolicy = cron {
-            hours = "*"
-            minutes = "*/5"
+            hours = config.startHour.toString()
             timezone = "SERVER"
 
-            dayOfWeek = "*"
-            dayOfMonth = "*"
+            dayOfWeek = config.daysOfWeek
+            dayOfMonth = config.daysOfMonth
         }
     }
 }
