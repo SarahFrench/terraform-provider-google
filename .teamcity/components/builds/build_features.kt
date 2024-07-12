@@ -24,3 +24,9 @@ fun BuildFeatures.golang() {
         })
     }
 }
+
+fun BuildFeatures.teamCityGolang() {
+    feature(GolangFeature {
+        testFormat = "json"
+    })
+}

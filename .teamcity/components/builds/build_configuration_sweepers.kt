@@ -78,7 +78,7 @@ class SweeperDetails(private val sweeperName: String, private val parentProjectN
             }
 
             features {
-                golang()
+                teamCityGolang()
                 if (sharedResources.isNotEmpty()) {
                     sharedResources {
                         // When the build runs, it locks the value(s) below

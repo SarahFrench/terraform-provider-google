@@ -53,7 +53,7 @@ class VcrDetails(private val providerName: String, private val buildId: String, 
             }
 
             features {
-                golang()
+                teamCityGolang()
                 if (sharedResources.isNotEmpty()) {
                     sharedResources {
                         // When the build runs, it locks the value(s) below
