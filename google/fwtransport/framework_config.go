@@ -190,7 +190,7 @@ func (p *FrameworkProviderConfig) ConfigureFromSDKConfig(primary *sdk_schema.Pro
 	p.Client = meta.Client
 	p.Region = types.StringValue(meta.Region)
 	p.Zone = types.StringValue(meta.Zone)
-	// p.TokenSource = meta.tokenSource
+	p.TokenSource = meta.TokenSource
 }
 
 // LoadAndValidateFramework handles the bulk of configuring the provider
