@@ -25,6 +25,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging"
 
+	sdk_schema "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
 	"github.com/hashicorp/terraform-provider-google/google/fwmodels"
 	transport_tpg "github.com/hashicorp/terraform-provider-google/google/transport"
 	"github.com/hashicorp/terraform-provider-google/google/verify"
@@ -172,6 +174,23 @@ type FrameworkProviderConfig struct {
 	VPCAccessBasePath                string
 	WorkbenchBasePath                string
 	WorkflowsBasePath                string
+}
+
+func (p *FrameworkProviderConfig) ConfigureFromSDKConfig(primary *sdk_schema.Provider, diags *diag.Diagnostics) {
+	if primary == nil {
+		return
+	}
+
+	// SDK provider is configured here
+	// Currently we don't reach this point in acceptance tests, but we do for manual testing
+
+	meta := primary.Meta().(*transport_tpg.Config)
+	p.BillingProject = types.StringValue(meta.BillingProject)
+	p.Project = types.StringValue(meta.Project)
+	p.Client = meta.Client
+	p.Region = types.StringValue(meta.Region)
+	p.Zone = types.StringValue(meta.Zone)
+	// p.TokenSource = meta.tokenSource
 }
 
 // LoadAndValidateFramework handles the bulk of configuring the provider

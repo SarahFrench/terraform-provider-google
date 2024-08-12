@@ -971,10 +971,15 @@ func (p *FrameworkProvider) Configure(ctx context.Context, req provider.Configur
 	}
 
 	// Configuration values are now available.
-	p.LoadAndValidateFramework(ctx, &data, req.TerraformVersion, &resp.Diagnostics, p.Version)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	// For the plugin-framework implementation of the provider we take the configuration values from the
+	// SDK implementation of the provider. This avoids duplicated logic and inconsistencies in implementation.
+
+	p.ConfigureFromSDKConfig(p.Primary, &resp.Diagnostics)
+
+	// p.LoadAndValidateFramework(ctx, &data, req.TerraformVersion, &resp.Diagnostics, p.Version)
+	// if resp.Diagnostics.HasError() {
+	// 	return
+	// }
 
 	// Example client configuration for data sources and resources
 	resp.DataSourceData = &p.FrameworkProviderConfig
