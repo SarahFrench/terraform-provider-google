@@ -786,6 +786,17 @@ func Provider() *schema.Provider {
 
 	transport_tpg.ConfigureDCLProvider(provider)
 
+	// Set the provider Meta (instance data) here.
+	// It will be overwritten by the result of the call to ConfigureContextFunc,
+	// but can be used pre-configuration by other (non-primary) provider servers.
+	var meta *transport_tpg.Config
+	if v, ok := provider.Meta().(*transport_tpg.Config); ok {
+		meta = v
+	} else {
+		meta = new(transport_tpg.Config)
+	}
+	provider.SetMeta(meta)
+
 	return provider
 }
 
