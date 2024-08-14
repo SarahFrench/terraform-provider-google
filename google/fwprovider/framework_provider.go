@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/function"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
@@ -20,7 +21,6 @@ import (
 
 	"github.com/hashicorp/terraform-provider-google/google/functions"
 	"github.com/hashicorp/terraform-provider-google/google/fwmodels"
-	"github.com/hashicorp/terraform-provider-google/google/fwtransport"
 	"github.com/hashicorp/terraform-provider-google/google/services/resourcemanager"
 	"github.com/hashicorp/terraform-provider-google/version"
 
@@ -44,7 +44,7 @@ func New(primary *sdk_schema.Provider) provider.ProviderWithMetaSchema {
 
 // FrameworkProvider is the provider implementation.
 type FrameworkProvider struct {
-	fwtransport.FrameworkProviderConfig
+	transport_tpg.Config
 	Version string
 	Primary *sdk_schema.Provider
 }
@@ -976,14 +976,9 @@ func (p *FrameworkProvider) Configure(ctx context.Context, req provider.Configur
 
 	p.ConfigureFromSDKConfig(p.Primary, &resp.Diagnostics)
 
-	// p.LoadAndValidateFramework(ctx, &data, req.TerraformVersion, &resp.Diagnostics, p.Version)
-	// if resp.Diagnostics.HasError() {
-	// 	return
-	// }
-
 	// Example client configuration for data sources and resources
-	resp.DataSourceData = &p.FrameworkProviderConfig
-	resp.ResourceData = &p.FrameworkProviderConfig
+	resp.DataSourceData = &p.Config
+	resp.ResourceData = &p.Config
 }
 
 // DataSources defines the data sources implemented in the provider.
@@ -1009,4 +1004,21 @@ func (p *FrameworkProvider) Functions(_ context.Context) []func() function.Funct
 		functions.NewRegionFromZoneFunction,
 		functions.NewZoneFromIdFunction,
 	}
+}
+
+func (p *FrameworkProvider) ConfigureFromSDKConfig(primary *sdk_schema.Provider, diags *diag.Diagnostics) {
+	if primary == nil {
+		return
+	}
+
+	// SDK provider is configured here if not null
+	// Currently we don't reach this point in acceptance tests, but we do for manual testing
+
+	meta := primary.Meta().(*transport_tpg.Config)
+	p.BillingProject = meta.BillingProject
+	p.Project = meta.Project
+	p.Client = meta.Client
+	p.Region = meta.Region
+	p.Zone = meta.Zone
+	p.TokenSource = meta.TokenSource
 }

@@ -7,12 +7,12 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-google/google/fwtransport"
 	"github.com/hashicorp/terraform-provider-google/google/tpgresource"
+	transport_tpg "github.com/hashicorp/terraform-provider-google/google/transport"
 )
 
 type LocationDescriber interface {
-	GetLocationDescription(providerConfig *fwtransport.FrameworkProviderConfig) LocationDescription
+	GetLocationDescription(providerConfig *transport_tpg.Config) LocationDescription
 }
 
 type LocationDescription struct {
@@ -23,12 +23,12 @@ type LocationDescription struct {
 	// Region
 	RegionSchemaField types.String
 	ResourceRegion    types.String
-	ProviderRegion    types.String
+	ProviderRegion    string // Configuring the PF provider from the SDK provider prevents use of types.String
 
 	// Zone
 	ZoneSchemaField types.String
 	ResourceZone    types.String
-	ProviderZone    types.String
+	ProviderZone    string // Configuring the PF provider from the SDK provider prevents use of types.String
 }
 
 func (ld *LocationDescription) GetLocation() (types.String, error) {
@@ -51,14 +51,14 @@ func (ld *LocationDescription) GetLocation() (types.String, error) {
 	}
 
 	// Location from region in provider config
-	if !ld.ProviderRegion.IsNull() && !ld.ProviderRegion.IsUnknown() && !ld.ProviderRegion.Equal(types.StringValue("")) {
-		location := tpgresource.GetResourceNameFromSelfLink(ld.ProviderRegion.ValueString()) // Region could be a self link
+	if ld.ProviderRegion != "" {
+		location := tpgresource.GetResourceNameFromSelfLink(ld.ProviderRegion) // Region could be a self link
 		return types.StringValue(location), nil
 	}
 
 	// Location from zone in provider config
-	if !ld.ProviderZone.IsNull() && !ld.ProviderZone.IsUnknown() && !ld.ProviderZone.Equal(types.StringValue("")) {
-		location := tpgresource.GetResourceNameFromSelfLink(ld.ProviderZone.ValueString()) // Zone could be a self link
+	if ld.ProviderZone != "" {
+		location := tpgresource.GetResourceNameFromSelfLink(ld.ProviderZone) // Zone could be a self link
 		return types.StringValue(location), nil
 	}
 
@@ -86,13 +86,13 @@ func (ld *LocationDescription) GetRegion() (types.String, error) {
 		return types.StringValue(tpgresource.GetRegionFromZone(region)), nil
 	}
 	// Region from provider config
-	if !ld.ProviderRegion.IsNull() && !ld.ProviderRegion.IsUnknown() && !ld.ProviderRegion.Equal(types.StringValue("")) {
-		region := tpgresource.GetResourceNameFromSelfLink(ld.ProviderRegion.ValueString()) // Region could be a self link
+	if ld.ProviderRegion != "" {
+		region := tpgresource.GetResourceNameFromSelfLink(ld.ProviderRegion) // Region could be a self link
 		return types.StringValue(region), nil
 	}
 	// Region from zone in provider config
-	if !ld.ProviderZone.IsNull() && !ld.ProviderZone.IsUnknown() && !ld.ProviderZone.Equal(types.StringValue("")) {
-		region := tpgresource.GetResourceNameFromSelfLink(ld.ProviderZone.ValueString()) // Region could be a self link
+	if ld.ProviderZone != "" {
+		region := tpgresource.GetResourceNameFromSelfLink(ld.ProviderZone) // Zone could be a self link
 		return types.StringValue(tpgresource.GetRegionFromZone(region)), nil
 	}
 
@@ -114,9 +114,9 @@ func (ld *LocationDescription) GetZone() (types.String, error) {
 		zone := tpgresource.GetResourceNameFromSelfLink(ld.ResourceZone.ValueString())
 		return types.StringValue(zone), nil
 	}
-	if !ld.ProviderZone.IsNull() && !ld.ProviderZone.IsUnknown() && !ld.ProviderZone.Equal(types.StringValue("")) {
+	if ld.ProviderZone != "" {
 		// Zone could be a self link
-		zone := tpgresource.GetResourceNameFromSelfLink(ld.ProviderZone.ValueString())
+		zone := tpgresource.GetResourceNameFromSelfLink(ld.ProviderZone)
 		return types.StringValue(zone), nil
 	}
 

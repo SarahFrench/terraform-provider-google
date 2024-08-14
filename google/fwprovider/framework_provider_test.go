@@ -207,9 +207,6 @@ resource "google_compute_address" "default" {
 }`, key, name)
 }
 
-// Copy the function testAccCheckComputeAddressDestroyProducer from the dns_test package to here,
-// as that function is in the _test.go file and not importable.
-//
 // testAccCheckDNSManagedZoneDestroyProducerFramework is the framework version of the generated testAccCheckDNSManagedZoneDestroyProducer
 // when we automate this, we'll use the automated version and can get rid of this
 func testAccCheckDNSManagedZoneDestroyProducerFramework(t *testing.T) func(s *terraform.State) error {
