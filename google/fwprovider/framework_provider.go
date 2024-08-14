@@ -9,7 +9,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/function"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
@@ -974,11 +973,11 @@ func (p *FrameworkProvider) Configure(ctx context.Context, req provider.Configur
 	// For the plugin-framework implementation of the provider we take the configuration values from the
 	// SDK implementation of the provider. This avoids duplicated logic and inconsistencies in implementation.
 
-	p.ConfigureFromSDKConfig(p.Primary, &resp.Diagnostics)
-
-	// Example client configuration for data sources and resources
-	resp.DataSourceData = &p.Config
-	resp.ResourceData = &p.Config
+	// This is how we make provider configuration info (configured clients, default project, etc) available to resources and data sources
+	// implemented using the plugin-framework. The resources' Configure functions receive this data in the ConfigureRequest argument.
+	meta := p.Primary.Meta().(*transport_tpg.Config)
+	resp.DataSourceData = meta
+	resp.ResourceData = meta
 }
 
 // DataSources defines the data sources implemented in the provider.
@@ -1006,19 +1005,19 @@ func (p *FrameworkProvider) Functions(_ context.Context) []func() function.Funct
 	}
 }
 
-func (p *FrameworkProvider) ConfigureFromSDKConfig(primary *sdk_schema.Provider, diags *diag.Diagnostics) {
-	if primary == nil {
-		return
-	}
+// func (p *FrameworkProvider) ConfigureFromSDKConfig(primary *sdk_schema.Provider, diags *diag.Diagnostics) {
+// 	if primary == nil {
+// 		return
+// 	}
 
-	// SDK provider is configured here if not null
-	// Currently we don't reach this point in acceptance tests, but we do for manual testing
+// 	// SDK provider is configured here if not null
+// 	// Currently we don't reach this point in acceptance tests, but we do for manual testing
 
-	meta := primary.Meta().(*transport_tpg.Config)
-	p.BillingProject = meta.BillingProject
-	p.Project = meta.Project
-	p.Client = meta.Client
-	p.Region = meta.Region
-	p.Zone = meta.Zone
-	p.TokenSource = meta.TokenSource
-}
+// 	meta := primary.Meta().(*transport_tpg.Config)
+// 	p.BillingProject = meta.BillingProject
+// 	p.Project = meta.Project
+// 	p.Client = meta.Client
+// 	p.Region = meta.Region
+// 	p.Zone = meta.Zone
+// 	p.TokenSource = meta.TokenSource
+// }
