@@ -187,6 +187,9 @@ type Config struct {
 
 	TokenSource oauth2.TokenSource
 
+	RequestBatcherServiceUsage *RequestBatcher
+	RequestBatcherIam          *RequestBatcher
+
 	AccessApprovalBasePath           string
 	AccessContextManagerBasePath     string
 	ActiveDirectoryBasePath          string
@@ -322,9 +325,6 @@ type Config struct {
 	// dcl
 	ContainerAwsBasePath   string
 	ContainerAzureBasePath string
-
-	RequestBatcherServiceUsage *RequestBatcher
-	RequestBatcherIam          *RequestBatcher
 }
 
 const AccessApprovalBasePathKey = "AccessApproval"

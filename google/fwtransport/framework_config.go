@@ -36,21 +36,35 @@ import (
 )
 
 type FrameworkProviderConfig struct {
-	BillingProject             types.String
-	Client                     *http.Client
-	Context                    context.Context
-	gRPCLoggingOptions         []option.ClientOption
-	PollInterval               time.Duration
-	Project                    types.String
-	Region                     types.String
-	Zone                       types.String
+	// DCLConfig
+	// AccessToken
+	// Credentials
+	// ImpersonateServiceAccount
+	// ImpersonateServiceAccountDelegates
+	Project        types.String
+	Region         types.String
+	BillingProject types.String
+	Zone           types.String
+	UniverseDomain types.String
+	Scopes         types.List
+	// BatchingConfig
+	UserProjectOverride types.Bool
+	// RequestReason
+	// RequestTimeout
+	// DefaultLabels
+	// AddTerraformAttributionLabel
+	// TerraformAttributionLabelAdditionStrategy
+	PollInterval time.Duration
+
+	Client             *http.Client
+	Context            context.Context
+	UserAgent          string
+	gRPCLoggingOptions []option.ClientOption
+
+	TokenSource oauth2.TokenSource
+
 	RequestBatcherIam          *transport_tpg.RequestBatcher
 	RequestBatcherServiceUsage *transport_tpg.RequestBatcher
-	Scopes                     types.List
-	TokenSource                oauth2.TokenSource
-	UniverseDomain             types.String
-	UserAgent                  string
-	UserProjectOverride        types.Bool
 
 	// paths for client setup
 	AccessApprovalBasePath           string
