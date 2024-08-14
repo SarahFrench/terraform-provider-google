@@ -31,13 +31,11 @@ type GoogleClientConfigDataSource struct {
 }
 
 type GoogleClientConfigModel struct {
-	Id types.String `tfsdk:"id"`
-	// Below use string data type because we reuse SDK config logic to configure the PF provider
-	// This propagates the SDK type system (only for provider-level config values)
-	Project     string `tfsdk:"project"`
-	Region      string `tfsdk:"region"`
-	Zone        string `tfsdk:"zone"`
-	AccessToken string `tfsdk:"access_token"`
+	Id          types.String `tfsdk:"id"`
+	Project     types.String `tfsdk:"project"`
+	Region      types.String `tfsdk:"region"`
+	Zone        types.String `tfsdk:"zone"`
+	AccessToken types.String `tfsdk:"access_token"`
 }
 
 func (m *GoogleClientConfigModel) GetLocationDescription(providerConfig *transport_tpg.Config) fwresource.LocationDescription {
@@ -131,16 +129,17 @@ func (d *GoogleClientConfigDataSource) Read(ctx context.Context, req datasource.
 	zone, _ := locationInfo.GetZone()
 
 	data.Id = types.StringValue(fmt.Sprintf("projects/%s/regions/%s/zones/%s", d.providerConfig.Project, region.String(), zone.String()))
-	data.Project = d.providerConfig.Project
-	data.Region = region.ValueString()
-	data.Zone = zone.ValueString()
+	// Should there be logic checking if project == "" ?
+	data.Project = types.StringValue(d.providerConfig.Project)
+	data.Region = region
+	data.Zone = zone
 
 	token, err := d.providerConfig.TokenSource.Token()
 	if err != nil {
 		diags.AddError("Error setting access_token", err.Error())
 		return
 	}
-	data.AccessToken = token.AccessToken
+	data.AccessToken = types.StringValue(token.AccessToken)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
