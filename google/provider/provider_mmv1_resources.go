@@ -227,7 +227,6 @@ var handwrittenDatasources = map[string]*schema.Resource{
 	"google_dataproc_metastore_service":                   dataprocmetastore.DataSourceDataprocMetastoreService(),
 	"google_datastream_static_ips":                        datastream.DataSourceGoogleDatastreamStaticIps(),
 	"google_dns_keys":                                     dns.DataSourceDNSKeys(),
-	"google_dns_managed_zone":                             dns.DataSourceDnsManagedZone(),
 	"google_dns_managed_zones":                            dns.DataSourceDnsManagedZones(),
 	"google_dns_record_set":                               dns.DataSourceDnsRecordSet(),
 	"google_gke_hub_membership_binding":                   gkehub2.DataSourceGoogleGkeHubMembershipBinding(),

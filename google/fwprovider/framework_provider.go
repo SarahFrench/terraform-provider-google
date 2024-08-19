@@ -20,6 +20,7 @@ import (
 
 	"github.com/hashicorp/terraform-provider-google/google/functions"
 	"github.com/hashicorp/terraform-provider-google/google/fwmodels"
+	"github.com/hashicorp/terraform-provider-google/google/services/dns"
 	"github.com/hashicorp/terraform-provider-google/google/services/resourcemanager"
 	"github.com/hashicorp/terraform-provider-google/version"
 
@@ -981,6 +982,7 @@ func (p *FrameworkProvider) Configure(ctx context.Context, req provider.Configur
 // DataSources defines the data sources implemented in the provider.
 func (p *FrameworkProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
+		dns.NewGoogleDnsManagedZoneDataSource, // google_dns_managed_zone
 		resourcemanager.NewGoogleClientConfigDataSource,
 		resourcemanager.NewGoogleClientOpenIDUserinfoDataSource,
 	}
