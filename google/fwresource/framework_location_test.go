@@ -22,8 +22,8 @@ func TestLocationDescription_GetZone(t *testing.T) {
 				ResourceRegion:   types.StringValue("resource-region"),
 				ResourceLocation: types.StringValue("resource-location"),
 				// Provider config doesn't override resource config
-				ProviderRegion: types.StringValue("provider-region"),
-				ProviderZone:   types.StringValue("provider-zone-a"),
+				ProviderRegion: "provider-region",
+				ProviderZone:   "provider-zone-a",
 			},
 			ExpectedZone: types.StringValue("resource-zone-a"),
 		},
@@ -37,7 +37,7 @@ func TestLocationDescription_GetZone(t *testing.T) {
 			ld: LocationDescription{
 				ResourceLocation: types.StringValue("resource-location"), // unused
 				ResourceRegion:   types.StringValue("resource-region"),   // unused
-				ProviderZone:     types.StringValue("provider-zone-a"),
+				ProviderZone:     "provider-zone-a",
 			},
 			ExpectedZone: types.StringValue("provider-zone-a"),
 		},
@@ -45,7 +45,7 @@ func TestLocationDescription_GetZone(t *testing.T) {
 		"returns the value of the zone field in provider config when zone is set to an empty string in resource config": {
 			ld: LocationDescription{
 				ResourceZone: types.StringValue(""),
-				ProviderZone: types.StringValue("provider-zone-a"),
+				ProviderZone: "provider-zone-a",
 			},
 			ExpectedZone: types.StringValue("provider-zone-a"),
 		},
@@ -60,7 +60,7 @@ func TestLocationDescription_GetZone(t *testing.T) {
 		"returns an error if zone is set as an empty string in both resource and provider configs": {
 			ld: LocationDescription{
 				ResourceZone: types.StringValue(""),
-				ProviderZone: types.StringValue(""),
+				ProviderZone: "",
 			},
 			ExpectedError: true,
 		},
@@ -110,8 +110,8 @@ func TestLocationDescription_GetRegion(t *testing.T) {
 				ResourceLocation: types.StringValue("resource-location"),
 				ResourceZone:     types.StringValue("resource-zone-a"),
 				// Provider config doesn't override resource config
-				ProviderRegion: types.StringValue("provider-region"),
-				ProviderZone:   types.StringValue("provider-zone-a"),
+				ProviderRegion: "provider-region",
+				ProviderZone:   "provider-zone-a",
 			},
 			ExpectedRegion: types.StringValue("resource-region"),
 		},
@@ -136,26 +136,26 @@ func TestLocationDescription_GetRegion(t *testing.T) {
 		},
 		"shortens region values set as self links in the provider config": {
 			ld: LocationDescription{
-				ProviderRegion: types.StringValue("https://www.googleapis.com/compute/v1/projects/my-project/regions/us-central1"),
+				ProviderRegion: "https://www.googleapis.com/compute/v1/projects/my-project/regions/us-central1",
 			},
 			ExpectedRegion: types.StringValue("us-central1"),
 		},
 		"shortens region values when derived from a zone self link set in the provider config": {
 			ld: LocationDescription{
-				ProviderZone: types.StringValue("https://www.googleapis.com/compute/v1/projects/my-project/zones/us-central1-a"),
+				ProviderZone: "https://www.googleapis.com/compute/v1/projects/my-project/zones/us-central1-a",
 			},
 			ExpectedRegion: types.StringValue("us-central1"),
 		},
 		"returns the value of the region field in provider config when region/zone is unset in resource config": {
 			ld: LocationDescription{
-				ProviderRegion: types.StringValue("provider-region"),
-				ProviderZone:   types.StringValue("provider-zone-a"), // unused
+				ProviderRegion: "provider-region",
+				ProviderZone:   "provider-zone-a", // unused
 			},
 			ExpectedRegion: types.StringValue("provider-region"),
 		},
 		"returns a region derived from the zone field in provider config when region unset in both resource and provider config": {
 			ld: LocationDescription{
-				ProviderZone: types.StringValue("provider-zone-a"),
+				ProviderZone: "provider-zone-a",
 			},
 			ExpectedRegion: types.StringValue("provider-zone"), // is truncated
 		},
@@ -171,7 +171,7 @@ func TestLocationDescription_GetRegion(t *testing.T) {
 			ld: LocationDescription{
 				ResourceRegion: types.StringValue(""),
 				ResourceZone:   types.StringValue(""),
-				ProviderRegion: types.StringValue("provider-region"),
+				ProviderRegion: "provider-region",
 			},
 			ExpectedRegion: types.StringValue("provider-region"),
 		},
@@ -186,8 +186,8 @@ func TestLocationDescription_GetRegion(t *testing.T) {
 			ld: LocationDescription{
 				ResourceRegion: types.StringValue(""),
 				ResourceZone:   types.StringValue(""),
-				ProviderRegion: types.StringValue(""),
-				ProviderZone:   types.StringValue(""),
+				ProviderRegion: "",
+				ProviderZone:   "",
 			},
 			ExpectedError: true,
 		},
@@ -237,8 +237,8 @@ func TestLocationDescription_GetLocation(t *testing.T) {
 				ResourceRegion:   types.StringValue("resource-region"),
 				ResourceZone:     types.StringValue("resource-zone-a"),
 				// Provider config doesn't override resource config
-				ProviderRegion: types.StringValue("provider-region"),
-				ProviderZone:   types.StringValue("provider-zone-a"),
+				ProviderRegion: "provider-region",
+				ProviderZone:   "provider-zone-a",
 			},
 			ExpectedLocation: types.StringValue("resource-location"),
 		},
@@ -275,20 +275,20 @@ func TestLocationDescription_GetLocation(t *testing.T) {
 		},
 		"returns the region value from the provider config when none of location/region/zone are set in the resource config": {
 			ld: LocationDescription{
-				ProviderRegion: types.StringValue("provider-region"), // Preferred to use region value over zone value if both are set
-				ProviderZone:   types.StringValue("provider-zone-a"),
+				ProviderRegion: "provider-region", // Preferred to use region value over zone value if both are set
+				ProviderZone:   "provider-zone-a",
 			},
 			ExpectedLocation: types.StringValue("provider-region"),
 		},
 		"returns the zone value from the provider config when none of location/region/zone are set in the resource config and region is not set in the provider config": {
 			ld: LocationDescription{
-				ProviderZone: types.StringValue("provider-zone-a"),
+				ProviderZone: "provider-zone-a",
 			},
 			ExpectedLocation: types.StringValue("provider-zone-a"),
 		},
 		"shortens the zone value when it is set as a self link in the provider config": {
 			ld: LocationDescription{
-				ProviderZone: types.StringValue("https://www.googleapis.com/compute/v1/projects/my-project/zones/provider-zone-a"),
+				ProviderZone: "https://www.googleapis.com/compute/v1/projects/my-project/zones/provider-zone-a",
 			},
 			ExpectedLocation: types.StringValue("provider-zone-a"),
 		},
@@ -313,7 +313,7 @@ func TestLocationDescription_GetLocation(t *testing.T) {
 				ResourceLocation: types.StringValue(""),
 				ResourceRegion:   types.StringValue(""),
 				ResourceZone:     types.StringValue(""),
-				ProviderZone:     types.StringValue("provider-zone-a"),
+				ProviderZone:     "provider-zone-a",
 			},
 			ExpectedLocation: types.StringValue("provider-zone-a"),
 		},
@@ -325,8 +325,8 @@ func TestLocationDescription_GetLocation(t *testing.T) {
 				ResourceLocation: types.StringValue(""),
 				ResourceRegion:   types.StringValue(""),
 				ResourceZone:     types.StringValue(""),
-				ProviderRegion:   types.StringValue(""),
-				ProviderZone:     types.StringValue(""),
+				ProviderRegion:   "",
+				ProviderZone:     "",
 			},
 			ExpectedError: true,
 		},
