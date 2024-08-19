@@ -34,7 +34,6 @@ var (
 
 // New is a helper function to simplify provider server and testing implementation.
 func New(primary *sdk_schema.Provider) provider.ProviderWithMetaSchema {
-
 	return &FrameworkProvider{
 		Version: version.ProviderVersion,
 		Primary: primary,
@@ -43,7 +42,6 @@ func New(primary *sdk_schema.Provider) provider.ProviderWithMetaSchema {
 
 // FrameworkProvider is the provider implementation.
 type FrameworkProvider struct {
-	transport_tpg.Config
 	Version string
 	Primary *sdk_schema.Provider
 }
@@ -969,9 +967,9 @@ func (p *FrameworkProvider) Configure(ctx context.Context, req provider.Configur
 		return
 	}
 
-	// Configuration values are now available.
-	// For the plugin-framework implementation of the provider we take the configuration values from the
-	// SDK implementation of the provider. This avoids duplicated logic and inconsistencies in implementation.
+	// Configuration values are now available. However we don't use them; for the plugin-framework implementation of the provider
+	// we take the configuration values from the SDK implementation of the provider. This avoids duplicated logic and inconsistencies in implementation.
+	// The trade off is that we don't benefit from the new type system that differentiates Null and Unknown values, which is especially useful for strings.
 
 	// This is how we make provider configuration info (configured clients, default project, etc) available to resources and data sources
 	// implemented using the plugin-framework. The resources' Configure functions receive this data in the ConfigureRequest argument.

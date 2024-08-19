@@ -265,6 +265,11 @@ func reformConfigWithProvider(config, provider string) string {
 	return string(resourceHeader.ReplaceAll(configBytes, providerReplacementBytes))
 }
 
+// HandleVCRConfiguration configures the recorder (github.com/dnaeon/go-vcr/recorder) used in the VCR test
+// This includes:
+//   - Setting the recording/replaying mode
+//   - Determining the path to the file API interactions will be recorded to/read from
+//   - Determining the logic used to match requests against recorded HTTP interactions (see rec.SetMatcher)
 func HandleVCRConfiguration(ctx context.Context, testName string, rndTripper http.RoundTripper, pollInterval time.Duration) (time.Duration, http.RoundTripper, fwDiags.Diagnostics) {
 	var diags fwDiags.Diagnostics
 	var vcrMode recorder.Mode
@@ -323,11 +328,11 @@ func HandleVCRConfiguration(ctx context.Context, testName string, rndTripper htt
 		if strings.Contains(contentType, "application/json") {
 			var reqJson, cassetteJson interface{}
 			if err := json.Unmarshal([]byte(reqBody), &reqJson); err != nil {
-				tflog.Debug(ctx, fmt.Sprintf("Failed to unmarshall request json: %v", err))
+				tflog.Debug(ctx, fmt.Sprintf("Failed to unmarshal request json: %v", err))
 				return false
 			}
 			if err := json.Unmarshal([]byte(i.Body), &cassetteJson); err != nil {
-				tflog.Debug(ctx, fmt.Sprintf("Failed to unmarshall cassette json: %v", err))
+				tflog.Debug(ctx, fmt.Sprintf("Failed to unmarshal cassette json: %v", err))
 				return false
 			}
 			return reflect.DeepEqual(reqJson, cassetteJson)
@@ -371,7 +376,9 @@ func (p *frameworkTestProvider) Configure(ctx context.Context, req provider.Conf
 	p.FrameworkProvider.Configure(ctx, req, resp)
 }
 
-// GetSDKProvider gets the SDK provider with an overwritten configure function to be called by MuxedProviders
+// GetSDKProvider gets the SDK provider for use in acceptance tests
+// If VCR is in use, the configure function is overwritten.
+// See usage in MuxedProviders
 func GetSDKProvider(testName string) *schema.Provider {
 	prov := tpgprovider.Provider()
 	if IsVcrEnabled() {
