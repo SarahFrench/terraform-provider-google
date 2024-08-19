@@ -22,7 +22,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-provider-google/google/fwmodels"
 	"github.com/hashicorp/terraform-provider-google/google/fwprovider"
 	tpgprovider "github.com/hashicorp/terraform-provider-google/google/provider"
 	"github.com/hashicorp/terraform-provider-google/google/tpgresource"
@@ -31,10 +30,8 @@ import (
 	"github.com/dnaeon/go-vcr/cassette"
 	"github.com/dnaeon/go-vcr/recorder"
 
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	fwDiags "github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -52,7 +49,6 @@ var configsLock = sync.RWMutex{}
 var sourcesLock = sync.RWMutex{}
 
 var configs map[string]*transport_tpg.Config
-var fwProviders map[string]*frameworkTestProvider
 
 var sources map[string]VcrSource
 
@@ -180,39 +176,6 @@ func closeRecorder(t *testing.T) {
 		// Clean up test config
 		configsLock.Lock()
 		delete(configs, t.Name())
-		configsLock.Unlock()
-
-		sourcesLock.Lock()
-		delete(sources, t.Name())
-		sourcesLock.Unlock()
-	}
-
-	configsLock.RLock()
-	fwProvider, fwOk := fwProviders[t.Name()]
-	configsLock.RUnlock()
-	if fwOk {
-		// We did not cache the config if it does not use VCR
-		if !t.Failed() && IsVcrEnabled() {
-			// If a test succeeds, write new seed/yaml to files
-			err := fwProvider.Client.Transport.(*recorder.Recorder).Stop()
-			if err != nil {
-				t.Error(err)
-			}
-			envPath := os.Getenv("VCR_PATH")
-
-			sourcesLock.RLock()
-			vcrSource, ok := sources[t.Name()]
-			sourcesLock.RUnlock()
-			if ok {
-				err = writeSeedToFile(vcrSource.seed, vcrSeedFile(envPath, t.Name()))
-				if err != nil {
-					t.Error(err)
-				}
-			}
-		}
-		// Clean up test config
-		configsLock.Lock()
-		delete(fwProviders, t.Name())
 		configsLock.Unlock()
 
 		sourcesLock.Lock()
@@ -380,18 +343,18 @@ func HandleVCRConfiguration(ctx context.Context, testName string, rndTripper htt
 // test versions of the provider that will call the same configure function, only append the VCR
 // configuration to it.
 
-func NewFrameworkTestProvider(testName string) *frameworkTestProvider {
+func NewFrameworkTestProvider(testName string, primary *schema.Provider) *frameworkTestProvider {
 	return &frameworkTestProvider{
 		FrameworkProvider: fwprovider.FrameworkProvider{
 			Version: "test",
+			Primary: primary,
 		},
 		TestName: testName,
 	}
 }
 
-// frameworkTestProvider is a test version of the plugin-framework version of the provider
-// that embeds FrameworkProvider whose configure function we can use
-// the Configure function is overwritten in the framework_provider_test file
+// frameworkTestProvider is a test version of the plugin-framework version of the provider.
+// This facilitates overwriting the Configure function that's used during acceptance tests.
 type frameworkTestProvider struct {
 	fwprovider.FrameworkProvider
 	TestName string
@@ -399,40 +362,13 @@ type frameworkTestProvider struct {
 
 // Configure is here to overwrite the FrameworkProvider configure function for VCR testing
 func (p *frameworkTestProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
+
+	// When creating the frameworkTestProvider struct we took in a pointer to the the SDK provider.
+	// That SDK provider was configured using `GetSDKProvider` and `getCachedConfig`, so this framework provider will also
+	// use a cached client for the correct test name.
+	// No extra logic is required here, but in future when the SDK provider is removed this function will
+	// need to be updated with logic similar to that in `GetSDKProvider`.
 	p.FrameworkProvider.Configure(ctx, req, resp)
-	if IsVcrEnabled() {
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		var diags fwDiags.Diagnostics
-		p.PollInterval, p.Client.Transport, diags = HandleVCRConfiguration(ctx, p.TestName, p.Client.Transport, p.PollInterval)
-		if diags.HasError() {
-			resp.Diagnostics.Append(diags...)
-			return
-		}
-
-		configsLock.Lock()
-		fwProviders[p.TestName] = p
-		configsLock.Unlock()
-		return
-	} else {
-		tflog.Debug(ctx, "VCR_PATH or VCR_MODE not set, skipping VCR")
-	}
-}
-
-func configureApiClient(ctx context.Context, p *fwprovider.FrameworkProvider, diags *fwDiags.Diagnostics) {
-	var data fwmodels.ProviderModel
-	var d fwDiags.Diagnostics
-
-	// Set defaults if needed - the only attribute without a default is ImpersonateServiceAccountDelegates
-	// this is a bit of a hack, but we'll just initialize it here so that it's been initialized at least
-	data.ImpersonateServiceAccountDelegates, d = types.ListValue(types.StringType, []attr.Value{})
-	diags.Append(d...)
-	if diags.HasError() {
-		return
-	}
-	p.LoadAndValidateFramework(ctx, &data, "test", diags, p.Version)
 }
 
 // GetSDKProvider gets the SDK provider with an overwritten configure function to be called by MuxedProviders
