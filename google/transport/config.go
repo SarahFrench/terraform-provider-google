@@ -185,7 +185,10 @@ type Config struct {
 	UserAgent          string
 	gRPCLoggingOptions []option.ClientOption
 
-	tokenSource oauth2.TokenSource
+	TokenSource oauth2.TokenSource
+
+	RequestBatcherServiceUsage *RequestBatcher
+	RequestBatcherIam          *RequestBatcher
 
 	AccessApprovalBasePath           string
 	AccessContextManagerBasePath     string
@@ -322,9 +325,6 @@ type Config struct {
 	// dcl
 	ContainerAwsBasePath   string
 	ContainerAzureBasePath string
-
-	RequestBatcherServiceUsage *RequestBatcher
-	RequestBatcherIam          *RequestBatcher
 }
 
 const AccessApprovalBasePathKey = "AccessApproval"
@@ -1353,7 +1353,7 @@ func (c *Config) LoadAndValidate(ctx context.Context) error {
 		return err
 	}
 
-	c.tokenSource = tokenSource
+	c.TokenSource = tokenSource
 
 	cleanCtx := context.WithValue(ctx, oauth2.HTTPClient, cleanhttp.DefaultClient())
 
@@ -1965,7 +1965,7 @@ func (c *Config) NewCloudIdentityClient(userAgent string) *cloudidentity.Service
 func (c *Config) BigTableClientFactory(userAgent string) *BigtableClientFactory {
 	bigtableClientFactory := &BigtableClientFactory{
 		UserAgent:           userAgent,
-		TokenSource:         c.tokenSource,
+		TokenSource:         c.TokenSource,
 		gRPCLoggingOptions:  c.gRPCLoggingOptions,
 		BillingProject:      c.BillingProject,
 		UserProjectOverride: c.UserProjectOverride,
