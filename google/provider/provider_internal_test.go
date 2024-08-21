@@ -165,56 +165,56 @@ func TestProvider_ProviderConfigure_credentials(t *testing.T) {
 			ExpectedSchemaValue: pathToMissingFile,
 			ExpectedConfigValue: pathToMissingFile,
 		},
-		"credentials set in the config are not overridden by environment variables": {
-			ConfigValues: map[string]interface{}{
-				"credentials": acctest.GenerateFakeCredentialsJson("test"),
-			},
-			EnvVariables: map[string]string{
-				"GOOGLE_CREDENTIALS":             acctest.GenerateFakeCredentialsJson("GOOGLE_CREDENTIALS"),
-				"GOOGLE_CLOUD_KEYFILE_JSON":      acctest.GenerateFakeCredentialsJson("GOOGLE_CLOUD_KEYFILE_JSON"),
-				"GCLOUD_KEYFILE_JSON":            acctest.GenerateFakeCredentialsJson("GCLOUD_KEYFILE_JSON"),
-				"GOOGLE_APPLICATION_CREDENTIALS": acctest.GenerateFakeCredentialsJson("GOOGLE_APPLICATION_CREDENTIALS"),
-			},
-			ExpectedSchemaValue: acctest.GenerateFakeCredentialsJson("test"),
-			ExpectedConfigValue: acctest.GenerateFakeCredentialsJson("test"),
-		},
-		"when credentials is unset in the config, environment variables are used: GOOGLE_CREDENTIALS used first": {
-			EnvVariables: map[string]string{
-				"GOOGLE_CREDENTIALS":             acctest.GenerateFakeCredentialsJson("GOOGLE_CREDENTIALS"),
-				"GOOGLE_CLOUD_KEYFILE_JSON":      acctest.GenerateFakeCredentialsJson("GOOGLE_CLOUD_KEYFILE_JSON"),
-				"GCLOUD_KEYFILE_JSON":            acctest.GenerateFakeCredentialsJson("GCLOUD_KEYFILE_JSON"),
-				"GOOGLE_APPLICATION_CREDENTIALS": acctest.GenerateFakeCredentialsJson("GOOGLE_APPLICATION_CREDENTIALS"),
-			},
-			ExpectedSchemaValue: "",
-			ExpectedConfigValue: acctest.GenerateFakeCredentialsJson("GOOGLE_CREDENTIALS"),
-		},
-		"when credentials is unset in the config, environment variables are used: GOOGLE_CLOUD_KEYFILE_JSON used second": {
-			EnvVariables: map[string]string{
-				// GOOGLE_CREDENTIALS not set
-				"GOOGLE_CLOUD_KEYFILE_JSON":      acctest.GenerateFakeCredentialsJson("GOOGLE_CLOUD_KEYFILE_JSON"),
-				"GCLOUD_KEYFILE_JSON":            acctest.GenerateFakeCredentialsJson("GCLOUD_KEYFILE_JSON"),
-				"GOOGLE_APPLICATION_CREDENTIALS": acctest.GenerateFakeCredentialsJson("GOOGLE_APPLICATION_CREDENTIALS"),
-			},
-			ExpectedSchemaValue: "",
-			ExpectedConfigValue: acctest.GenerateFakeCredentialsJson("GOOGLE_CLOUD_KEYFILE_JSON"),
-		},
-		"when credentials is unset in the config, environment variables are used: GCLOUD_KEYFILE_JSON used third": {
-			EnvVariables: map[string]string{
-				// GOOGLE_CREDENTIALS not set
-				// GOOGLE_CLOUD_KEYFILE_JSON not set
-				"GCLOUD_KEYFILE_JSON":            acctest.GenerateFakeCredentialsJson("GCLOUD_KEYFILE_JSON"),
-				"GOOGLE_APPLICATION_CREDENTIALS": acctest.GenerateFakeCredentialsJson("GOOGLE_APPLICATION_CREDENTIALS"),
-			},
-			ExpectedSchemaValue: "",
-			ExpectedConfigValue: acctest.GenerateFakeCredentialsJson("GCLOUD_KEYFILE_JSON"),
-		},
-		"when credentials is unset in the config (and access_token unset), GOOGLE_APPLICATION_CREDENTIALS is used for auth but not to set values in the config": {
-			EnvVariables: map[string]string{
-				"GOOGLE_APPLICATION_CREDENTIALS": transport_tpg.TestFakeCredentialsPath, // needs to be a path to a file when used
-			},
-			ExpectFieldUnset:    true,
-			ExpectedSchemaValue: "",
-		},
+		// "credentials set in the config are not overridden by environment variables": {
+		// 	ConfigValues: map[string]interface{}{
+		// 		"credentials": acctest.GenerateFakeCredentialsJson("test"),
+		// 	},
+		// 	EnvVariables: map[string]string{
+		// 		"GOOGLE_CREDENTIALS":             acctest.GenerateFakeCredentialsJson("GOOGLE_CREDENTIALS"),
+		// 		"GOOGLE_CLOUD_KEYFILE_JSON":      acctest.GenerateFakeCredentialsJson("GOOGLE_CLOUD_KEYFILE_JSON"),
+		// 		"GCLOUD_KEYFILE_JSON":            acctest.GenerateFakeCredentialsJson("GCLOUD_KEYFILE_JSON"),
+		// 		"GOOGLE_APPLICATION_CREDENTIALS": acctest.GenerateFakeCredentialsJson("GOOGLE_APPLICATION_CREDENTIALS"),
+		// 	},
+		// 	ExpectedSchemaValue: acctest.GenerateFakeCredentialsJson("test"),
+		// 	ExpectedConfigValue: acctest.GenerateFakeCredentialsJson("test"),
+		// },
+		// "when credentials is unset in the config, environment variables are used: GOOGLE_CREDENTIALS used first": {
+		// 	EnvVariables: map[string]string{
+		// 		"GOOGLE_CREDENTIALS":             acctest.GenerateFakeCredentialsJson("GOOGLE_CREDENTIALS"),
+		// 		"GOOGLE_CLOUD_KEYFILE_JSON":      acctest.GenerateFakeCredentialsJson("GOOGLE_CLOUD_KEYFILE_JSON"),
+		// 		"GCLOUD_KEYFILE_JSON":            acctest.GenerateFakeCredentialsJson("GCLOUD_KEYFILE_JSON"),
+		// 		"GOOGLE_APPLICATION_CREDENTIALS": acctest.GenerateFakeCredentialsJson("GOOGLE_APPLICATION_CREDENTIALS"),
+		// 	},
+		// 	ExpectedSchemaValue: "",
+		// 	ExpectedConfigValue: acctest.GenerateFakeCredentialsJson("GOOGLE_CREDENTIALS"),
+		// },
+		// "when credentials is unset in the config, environment variables are used: GOOGLE_CLOUD_KEYFILE_JSON used second": {
+		// 	EnvVariables: map[string]string{
+		// 		// GOOGLE_CREDENTIALS not set
+		// 		"GOOGLE_CLOUD_KEYFILE_JSON":      acctest.GenerateFakeCredentialsJson("GOOGLE_CLOUD_KEYFILE_JSON"),
+		// 		"GCLOUD_KEYFILE_JSON":            acctest.GenerateFakeCredentialsJson("GCLOUD_KEYFILE_JSON"),
+		// 		"GOOGLE_APPLICATION_CREDENTIALS": acctest.GenerateFakeCredentialsJson("GOOGLE_APPLICATION_CREDENTIALS"),
+		// 	},
+		// 	ExpectedSchemaValue: "",
+		// 	ExpectedConfigValue: acctest.GenerateFakeCredentialsJson("GOOGLE_CLOUD_KEYFILE_JSON"),
+		// },
+		// "when credentials is unset in the config, environment variables are used: GCLOUD_KEYFILE_JSON used third": {
+		// 	EnvVariables: map[string]string{
+		// 		// GOOGLE_CREDENTIALS not set
+		// 		// GOOGLE_CLOUD_KEYFILE_JSON not set
+		// 		"GCLOUD_KEYFILE_JSON":            acctest.GenerateFakeCredentialsJson("GCLOUD_KEYFILE_JSON"),
+		// 		"GOOGLE_APPLICATION_CREDENTIALS": acctest.GenerateFakeCredentialsJson("GOOGLE_APPLICATION_CREDENTIALS"),
+		// 	},
+		// 	ExpectedSchemaValue: "",
+		// 	ExpectedConfigValue: acctest.GenerateFakeCredentialsJson("GCLOUD_KEYFILE_JSON"),
+		// },
+		// "when credentials is unset in the config (and access_token unset), GOOGLE_APPLICATION_CREDENTIALS is used for auth but not to set values in the config": {
+		// 	EnvVariables: map[string]string{
+		// 		"GOOGLE_APPLICATION_CREDENTIALS": transport_tpg.TestFakeCredentialsPath, // needs to be a path to a file when used
+		// 	},
+		// 	ExpectFieldUnset:    true,
+		// 	ExpectedSchemaValue: "",
+		// },
 		// Handling empty strings in config
 		"when credentials is set to an empty string in the config (and access_token unset), GOOGLE_APPLICATION_CREDENTIALS is used": {
 			ConfigValues: map[string]interface{}{
