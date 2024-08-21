@@ -11,12 +11,14 @@ import (
 	"github.com/hashicorp/terraform-provider-google/google/envvar"
 )
 
-// Implement testacc with cases where we test creds in config vs creds in ENV
-
+// Test different ways of providing credentials when using SDK and PF implemented resources + data sources
+// Need to provision something to trigger errors when 'bad' credentials used
 func TestAccProvider_credentials(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"config takes precedence over environment variables":           testAccProvider_credentialsInProviderBlock_configPrecedenceEnvironmentVariables,
-		"assert precedence order of credentials environment variables": testAccProvider_credentialsInProviderBlock_precedenceOrderEnvironmentVariables,
+		"configuring credentials as a path to a non-existent file results in an error": testAccProvider_credentialsInProviderBlock_badFilepathCausesError,
+		"when credentials is set to an empty string there is an error":                 testAccProvider_credentialsInProviderBlock_configEmptyStringCausesError,
+		"config takes precedence over environment variables":                           testAccProvider_credentialsInProviderBlock_configPrecedenceEnvironmentVariables,
+		"assert precedence order of credentials environment variables":                 testAccProvider_credentialsInProviderBlock_precedenceOrderEnvironmentVariables,
 	}
 
 	for name, tc := range testCases {
@@ -43,7 +45,7 @@ func testAccProvider_credentialsInProviderBlock_configPrecedenceEnvironmentVaria
 
 	context := map[string]interface{}{
 		"credentials":   credentials,
-		"resource_name": "tf-test-pubsub-topic-" + acctest.RandString(t, 10),
+		"resource_name": "tf-test-resource-" + acctest.RandString(t, 10),
 	}
 
 	acctest.VcrTest(t, resource.TestCase{
@@ -52,6 +54,44 @@ func testAccProvider_credentialsInProviderBlock_configPrecedenceEnvironmentVaria
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProvider_credentialsInProviderBlock(context),
+			},
+		},
+	})
+}
+
+func testAccProvider_credentialsInProviderBlock_configEmptyStringCausesError(t *testing.T) {
+
+	context := map[string]interface{}{
+		"credentials":   "",
+		"resource_name": "tf-test-resource-" + acctest.RandString(t, 10),
+	}
+
+	acctest.VcrTest(t, resource.TestCase{
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories(t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccProvider_credentialsInProviderBlock(context),
+				ExpectError: regexp.MustCompile("expected a non-empty string"),
+			},
+		},
+	})
+}
+
+func testAccProvider_credentialsInProviderBlock_badFilepathCausesError(t *testing.T) {
+
+	pathToMissingFile := "./this/path/does/not/exist.json" // Doesn't exist
+
+	context := map[string]interface{}{
+		"credentials":   pathToMissingFile,
+		"resource_name": "tf-test-resource-" + acctest.RandString(t, 10),
+	}
+
+	acctest.VcrTest(t, resource.TestCase{
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories(t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccProvider_credentialsInProviderBlock(context),
+				ExpectError: regexp.MustCompile("JSON credentials are not valid"),
 			},
 		},
 	})
@@ -73,7 +113,7 @@ func testAccProvider_credentialsInProviderBlock_precedenceOrderEnvironmentVariab
 	badCreds := acctest.GenerateFakeCredentialsJson("test")
 
 	context := map[string]interface{}{
-		"resource_name": "tf-test-pubsub-topic-" + acctest.RandString(t, 10),
+		"resource_name": "tf-test-resource-" + acctest.RandString(t, 10),
 	}
 
 	acctest.VcrTest(t, resource.TestCase{
@@ -149,9 +189,20 @@ func testAccProvider_credentials(context map[string]interface{}) string {
 	return acctest.Nprintf(`
 provider "google" {}
 
-// Provision a resource to test credentials and ensure VCR recordings are made
-resource "google_pubsub_topic" "default" {
-  name = "%{resource_name}"
+// SDK
+resource "google_dns_managed_zone" "default" {
+  name     = "%{resource_name}"
+  dns_name = "dnssec.gcp.tfacc.hashicorptest.com."
+
+  dnssec_config {
+    state         = "off"
+    non_existence = "nsec3"
+  }
+}
+
+// Either SDK or PF depending on provider version
+data "google_dns_managed_zone" "default" {
+  name     = google_dns_managed_zone.default.name
 }
 `, context)
 }
@@ -162,9 +213,20 @@ provider "google" {
 	credentials = "%{credentials}"
 }
 
-// Provision a resource to test credentials and ensure VCR recordings are made
-resource "google_pubsub_topic" "default" {
-  name = "%{resource_name}"
+// SDK
+resource "google_dns_managed_zone" "default" {
+  name     = "%{resource_name}"
+  dns_name = "dnssec.gcp.tfacc.hashicorptest.com."
+
+  dnssec_config {
+    state         = "off"
+    non_existence = "nsec3"
+  }
+}
+
+// Either SDK or PF depending on provider version
+data "google_dns_managed_zone" "default" {
+  name     = google_dns_managed_zone.default.name
 }
 `, context)
 }
