@@ -1005,5 +1005,6 @@ func (p *FrameworkProvider) Functions(_ context.Context) []func() function.Funct
 func (p *FrameworkProvider) EphemeralResources(_ context.Context) []func() ephemeral.EphemeralResource {
 	return []func() ephemeral.EphemeralResource{
 		// TODO!
+		resourcemanager.GoogleEphemeralServiceAccountAccessToken,
 	}
 }
