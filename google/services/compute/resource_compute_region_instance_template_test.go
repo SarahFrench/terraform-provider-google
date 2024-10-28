@@ -3565,7 +3565,7 @@ resource "google_tags_tag_key" "key" {
 }
 
 resource "google_tags_tag_value" "value" {
-  parent = google_tags_tag_key.key.id
+  parent = "tagKeys/${google_tags_tag_key.key.name}"
   short_name = "foo%{random_suffix}"
   description = "For foo resources."
 }

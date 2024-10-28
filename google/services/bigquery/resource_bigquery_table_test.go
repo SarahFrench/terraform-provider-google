@@ -4276,7 +4276,7 @@ resource "google_tags_tag_key" "key1" {
 }
 
 resource "google_tags_tag_value" "value1" {
-  parent     = google_tags_tag_key.key1.id
+  parent = "tagKeys/${google_tags_tag_key.key1.name}"
   short_name = "%{tag_value_name1}"
 }
 
@@ -4289,7 +4289,7 @@ resource "google_bigquery_table" "test" {
   dataset_id = "${google_bigquery_dataset.test.dataset_id}"
   table_id   = "%{table_id}"
   resource_tags = {
-    (google_tags_tag_key.key1.namespaced_name) = google_tags_tag_value.value1.short_name
+    "%{project_id}/${google_tags_tag_key.key1.short_name}" = "${google_tags_tag_value.value1.short_name}"
   }
 }
 `, context)
@@ -4303,7 +4303,7 @@ resource "google_tags_tag_key" "key1" {
 }
 
 resource "google_tags_tag_value" "value1" {
-  parent     = google_tags_tag_key.key1.id
+  parent = "tagKeys/${google_tags_tag_key.key1.name}"
   short_name = "%{tag_value_name1}"
 }
 
@@ -4313,7 +4313,7 @@ resource "google_tags_tag_key" "key2" {
 }
 
 resource "google_tags_tag_value" "value2" {
-  parent     = google_tags_tag_key.key2.id
+  parent = "tagKeys/${google_tags_tag_key.key2.name}"
   short_name = "%{tag_value_name2}"
 }
 
@@ -4326,8 +4326,8 @@ resource "google_bigquery_table" "test" {
   dataset_id = "${google_bigquery_dataset.test.dataset_id}"
   table_id   = "%{table_id}"
   resource_tags = {
-    (google_tags_tag_key.key1.namespaced_name) = google_tags_tag_value.value1.short_name
-    (google_tags_tag_key.key2.namespaced_name) = google_tags_tag_value.value2.short_name
+    "%{project_id}/${google_tags_tag_key.key1.short_name}" = "${google_tags_tag_value.value1.short_name}"
+    "%{project_id}/${google_tags_tag_key.key2.short_name}" = "${google_tags_tag_value.value2.short_name}"
   }
 }
 `, context)
@@ -4341,7 +4341,7 @@ resource "google_tags_tag_key" "key1" {
 }
 
 resource "google_tags_tag_value" "value1" {
-  parent     = google_tags_tag_key.key1.id
+  parent = "tagKeys/${google_tags_tag_key.key1.name}"
   short_name = "%{tag_value_name1}"
 }
 
@@ -4351,7 +4351,7 @@ resource "google_tags_tag_key" "key2" {
 }
 
 resource "google_tags_tag_value" "value2" {
-  parent     = google_tags_tag_key.key2.id
+  parent = "tagKeys/${google_tags_tag_key.key2.name}"
   short_name = "%{tag_value_name2}"
 }
 

@@ -70,5 +70,3 @@ exported:
 * `display_name` - The display name for the service account.
 
 * `member` - The Identity of the service account in the form `serviceAccount:{email}`. This value is often used to refer to the service account in order to grant IAM permissions.
-
-* `disabled` - Whether a service account is disabled or not.

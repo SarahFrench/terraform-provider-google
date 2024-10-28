@@ -233,7 +233,7 @@ resource "google_compute_region_network_firewall_policy_rule" "primary" {
     }
 
     src_secure_tags {
-      name = google_tags_tag_value.basic_value.id
+      name = "tagValues/${google_tags_tag_value.basic_value.name}"
     }
     
     src_address_groups = [google_network_security_address_group.basic_regional_networksecurity_address_group.id]
@@ -258,7 +258,7 @@ resource "google_tags_tag_key" "basic_key" {
 
 resource "google_tags_tag_value" "basic_value" {
   description = "For valuename resources."
-  parent      = google_tags_tag_key.basic_key.id
+  parent      = "tagKeys/${google_tags_tag_key.basic_key.name}"
   short_name  = "tf-test-tagvalue-%{random_suffix}"
 }
 
@@ -311,7 +311,7 @@ resource "google_compute_region_network_firewall_policy_rule" "primary" {
   }
 
   target_secure_tags {
-    name = google_tags_tag_value.basic_value.id
+    name = "tagValues/${google_tags_tag_value.basic_value.name}"
   }
 }
 
@@ -333,7 +333,7 @@ resource "google_tags_tag_key" "basic_key" {
 
 resource "google_tags_tag_value" "basic_value" {
   description = "For valuename resources."
-  parent      = google_tags_tag_key.basic_key.id
+  parent      = "tagKeys/${google_tags_tag_key.basic_key.name}"
   short_name  = "tf-test-tagvalue-%{random_suffix}"
 }
 
