@@ -6,9 +6,6 @@ import (
 	"context"
 	"fmt"
 
-	"google.golang.org/api/dns/v1"
-
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -18,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-google/google/fwmodels"
 	"github.com/hashicorp/terraform-provider-google/google/fwresource"
 	"github.com/hashicorp/terraform-provider-google/google/fwtransport"
+	transport_tpg "github.com/hashicorp/terraform-provider-google/google/transport"
 )
 
 // Ensure the implementation satisfies the expected interfaces
@@ -32,8 +30,7 @@ func NewGoogleDnsManagedZoneDataSource() datasource.DataSource {
 
 // GoogleDnsManagedZoneDataSource defines the data source implementation
 type GoogleDnsManagedZoneDataSource struct {
-	client  *dns.Service
-	project types.String
+	providerConfig *transport_tpg.Config
 }
 
 type GoogleDnsManagedZoneModel struct {
@@ -122,17 +119,16 @@ func (d *GoogleDnsManagedZoneDataSource) Configure(ctx context.Context, req data
 		return
 	}
 
-	p, ok := req.ProviderData.(*fwtransport.FrameworkProviderConfig)
+	p, ok := req.ProviderData.(*transport_tpg.Config)
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *fwtransport.FrameworkProviderConfig, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			fmt.Sprintf("Expected *transport_tpg.Config, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
 		return
 	}
 
-	d.client = p.NewDnsClient(p.UserAgent, &resp.Diagnostics)
-	d.project = p.Project
+	d.providerConfig = p
 }
 
 func (d *GoogleDnsManagedZoneDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -146,21 +142,22 @@ func (d *GoogleDnsManagedZoneDataSource) Read(ctx context.Context, req datasourc
 		return
 	}
 
-	d.client.UserAgent = fwtransport.GenerateFrameworkUserAgentString(metaData, d.client.UserAgent)
-
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	data.Project = fwresource.GetProjectFramework(data.Project, d.project, &resp.Diagnostics)
+	userAgent := fwtransport.GenerateFrameworkUserAgentString(metaData, d.providerConfig.UserAgent)
+	client := d.providerConfig.NewDnsClient(userAgent)
+
+	data.Project = fwresource.GetProjectFramework(data.Project, types.StringValue(d.providerConfig.Project), &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	data.Id = types.StringValue(fmt.Sprintf("projects/%s/managedZones/%s", data.Project.ValueString(), data.Name.ValueString()))
-	clientResp, err := d.client.ManagedZones.Get(data.Project.ValueString(), data.Name.ValueString()).Do()
+	clientResp, err := client.ManagedZones.Get(data.Project.ValueString(), data.Name.ValueString()).Do()
 	if err != nil {
 		fwtransport.HandleDatasourceNotFoundError(ctx, err, &resp.State, fmt.Sprintf("dataSourceDnsManagedZone %q", data.Name.ValueString()), &resp.Diagnostics)
 		if resp.Diagnostics.HasError() {
@@ -182,19 +179,4 @@ func (d *GoogleDnsManagedZoneDataSource) Read(ctx context.Context, req datasourc
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-}
-
-func getDnsManagedZoneAttrs() map[string]attr.Type {
-	dnsManagedZoneAttrs := map[string]attr.Type{
-		"name":            types.StringType,
-		"project":         types.StringType,
-		"dns_name":        types.StringType,
-		"description":     types.StringType,
-		"managed_zone_id": types.Int64Type,
-		"name_servers":    types.ListType{}.WithElementType(types.StringType),
-		"visibility":      types.StringType,
-		"id":              types.StringType,
-	}
-
-	return dnsManagedZoneAttrs
 }
