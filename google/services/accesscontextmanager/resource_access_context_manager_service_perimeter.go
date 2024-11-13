@@ -22,8 +22,6 @@ import (
 	"log"
 	"net/http"
 	"reflect"
-	"slices"
-	"sort"
 	"strings"
 	"time"
 
@@ -33,56 +31,6 @@ import (
 	transport_tpg "github.com/hashicorp/terraform-provider-google/google/transport"
 	"github.com/hashicorp/terraform-provider-google/google/verify"
 )
-
-func AccessContextManagerServicePerimeterEgressToResourcesDiffSupressFunc(_, _, _ string, d *schema.ResourceData) bool {
-	old, new := d.GetChange("egress_to.0.resources")
-
-	oldResources, err := tpgresource.InterfaceSliceToStringSlice(old)
-	if err != nil {
-		log.Printf("[ERROR] Failed to convert config value: %s", err)
-		return false
-	}
-
-	newResources, err := tpgresource.InterfaceSliceToStringSlice(new)
-	if err != nil {
-		log.Printf("[ERROR] Failed to convert config value: %s", err)
-		return false
-	}
-
-	sort.Strings(oldResources)
-	sort.Strings(newResources)
-
-	return slices.Equal(oldResources, newResources)
-}
-
-func AccessContextManagerServicePerimeterIngressToResourcesDiffSupressFunc(_, _, _ string, d *schema.ResourceData) bool {
-	old, new := d.GetChange("ingress_to.0.resources")
-
-	oldResources, err := tpgresource.InterfaceSliceToStringSlice(old)
-	if err != nil {
-		log.Printf("[ERROR] Failed to convert config value: %s", err)
-		return false
-	}
-
-	newResources, err := tpgresource.InterfaceSliceToStringSlice(new)
-	if err != nil {
-		log.Printf("[ERROR] Failed to convert config value: %s", err)
-		return false
-	}
-
-	sort.Strings(oldResources)
-	sort.Strings(newResources)
-
-	return slices.Equal(oldResources, newResources)
-}
-
-func AccessContextManagerServicePerimeterIdentityTypeDiffSupressFunc(_, old, new string, _ *schema.ResourceData) bool {
-	if old == "" && new == "IDENTITY_TYPE_UNSPECIFIED" {
-		return true
-	}
-
-	return old == new
-}
 
 func ResourceAccessContextManagerServicePerimeter() *schema.Resource {
 	return &schema.Resource{
@@ -208,10 +156,9 @@ represent individual user or service account only.`,
 													Set: schema.HashString,
 												},
 												"identity_type": {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ValidateFunc:     verify.ValidateEnum([]string{"IDENTITY_TYPE_UNSPECIFIED", "ANY_IDENTITY", "ANY_USER_ACCOUNT", "ANY_SERVICE_ACCOUNT", ""}),
-													DiffSuppressFunc: AccessContextManagerServicePerimeterIdentityTypeDiffSupressFunc,
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidateEnum([]string{"IDENTITY_TYPE_UNSPECIFIED", "ANY_IDENTITY", "ANY_USER_ACCOUNT", "ANY_SERVICE_ACCOUNT", ""}),
 													Description: `Specifies the type of identities that are allowed access to outside the
 perimeter. If left unspecified, then members of 'identities' field will
 be allowed access. Possible values: ["IDENTITY_TYPE_UNSPECIFIED", "ANY_IDENTITY", "ANY_USER_ACCOUNT", "ANY_SERVICE_ACCOUNT"]`,
@@ -348,10 +295,9 @@ individual user or service account only.`,
 													Set: schema.HashString,
 												},
 												"identity_type": {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ValidateFunc:     verify.ValidateEnum([]string{"IDENTITY_TYPE_UNSPECIFIED", "ANY_IDENTITY", "ANY_USER_ACCOUNT", "ANY_SERVICE_ACCOUNT", ""}),
-													DiffSuppressFunc: AccessContextManagerServicePerimeterIdentityTypeDiffSupressFunc,
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidateEnum([]string{"IDENTITY_TYPE_UNSPECIFIED", "ANY_IDENTITY", "ANY_USER_ACCOUNT", "ANY_SERVICE_ACCOUNT", ""}),
 													Description: `Specifies the type of identities that are allowed access from outside the
 perimeter. If left unspecified, then members of 'identities' field will be
 allowed access. Possible values: ["IDENTITY_TYPE_UNSPECIFIED", "ANY_IDENTITY", "ANY_USER_ACCOUNT", "ANY_SERVICE_ACCOUNT"]`,
@@ -565,21 +511,18 @@ a perimeter bridge.`,
 												"identities": {
 													Type:     schema.TypeSet,
 													Optional: true,
-													Description: `Identities can be an individual user, service account, Google group,
-or third-party identity. For third-party identity, only single identities
-are supported and other identity types are not supported.The v1 identities
-that have the prefix user, group and serviceAccount in
-https://cloud.google.com/iam/docs/principal-identifiers#v1 are supported.`,
+													Description: `A list of identities that are allowed access through this 'EgressPolicy'.
+Should be in the format of email address. The email address should
+represent individual user or service account only.`,
 													Elem: &schema.Schema{
 														Type: schema.TypeString,
 													},
 													Set: schema.HashString,
 												},
 												"identity_type": {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ValidateFunc:     verify.ValidateEnum([]string{"IDENTITY_TYPE_UNSPECIFIED", "ANY_IDENTITY", "ANY_USER_ACCOUNT", "ANY_SERVICE_ACCOUNT", ""}),
-													DiffSuppressFunc: AccessContextManagerServicePerimeterIdentityTypeDiffSupressFunc,
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidateEnum([]string{"IDENTITY_TYPE_UNSPECIFIED", "ANY_IDENTITY", "ANY_USER_ACCOUNT", "ANY_SERVICE_ACCOUNT", ""}),
 													Description: `Specifies the type of identities that are allowed access to outside the
 perimeter. If left unspecified, then members of 'identities' field will
 be allowed access. Possible values: ["IDENTITY_TYPE_UNSPECIFIED", "ANY_IDENTITY", "ANY_USER_ACCOUNT", "ANY_SERVICE_ACCOUNT"]`,
@@ -707,21 +650,18 @@ to apply.`,
 												"identities": {
 													Type:     schema.TypeSet,
 													Optional: true,
-													Description: `Identities can be an individual user, service account, Google group,
-or third-party identity. For third-party identity, only single identities
-are supported and other identity types are not supported.The v1 identities
-that have the prefix user, group and serviceAccount in
-https://cloud.google.com/iam/docs/principal-identifiers#v1 are supported.`,
+													Description: `A list of identities that are allowed access through this ingress policy.
+Should be in the format of email address. The email address should represent
+individual user or service account only.`,
 													Elem: &schema.Schema{
 														Type: schema.TypeString,
 													},
 													Set: schema.HashString,
 												},
 												"identity_type": {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ValidateFunc:     verify.ValidateEnum([]string{"IDENTITY_TYPE_UNSPECIFIED", "ANY_IDENTITY", "ANY_USER_ACCOUNT", "ANY_SERVICE_ACCOUNT", ""}),
-													DiffSuppressFunc: AccessContextManagerServicePerimeterIdentityTypeDiffSupressFunc,
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidateEnum([]string{"IDENTITY_TYPE_UNSPECIFIED", "ANY_IDENTITY", "ANY_USER_ACCOUNT", "ANY_SERVICE_ACCOUNT", ""}),
 													Description: `Specifies the type of identities that are allowed access from outside the
 perimeter. If left unspecified, then members of 'identities' field will be
 allowed access. Possible values: ["IDENTITY_TYPE_UNSPECIFIED", "ANY_IDENTITY", "ANY_USER_ACCOUNT", "ANY_SERVICE_ACCOUNT"]`,

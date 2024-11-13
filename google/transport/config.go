@@ -266,7 +266,6 @@ type Config struct {
 	KMSBasePath                      string
 	LoggingBasePath                  string
 	LookerBasePath                   string
-	ManagedKafkaBasePath             string
 	MemcacheBasePath                 string
 	MemorystoreBasePath              string
 	MigrationCenterBasePath          string
@@ -411,7 +410,6 @@ const IntegrationsBasePathKey = "Integrations"
 const KMSBasePathKey = "KMS"
 const LoggingBasePathKey = "Logging"
 const LookerBasePathKey = "Looker"
-const ManagedKafkaBasePathKey = "ManagedKafka"
 const MemcacheBasePathKey = "Memcache"
 const MemorystoreBasePathKey = "Memorystore"
 const MigrationCenterBasePathKey = "MigrationCenter"
@@ -550,7 +548,6 @@ var DefaultBasePaths = map[string]string{
 	KMSBasePathKey:                      "https://cloudkms.googleapis.com/v1/",
 	LoggingBasePathKey:                  "https://logging.googleapis.com/v2/",
 	LookerBasePathKey:                   "https://looker.googleapis.com/v1/",
-	ManagedKafkaBasePathKey:             "https://managedkafka.googleapis.com/v1/",
 	MemcacheBasePathKey:                 "https://memcache.googleapis.com/v1/",
 	MemorystoreBasePathKey:              "https://memorystore.googleapis.com/v1/",
 	MigrationCenterBasePathKey:          "https://migrationcenter.googleapis.com/v1/",
@@ -1071,11 +1068,6 @@ func SetEndpointDefaults(d *schema.ResourceData) error {
 		d.Set("looker_custom_endpoint", MultiEnvDefault([]string{
 			"GOOGLE_LOOKER_CUSTOM_ENDPOINT",
 		}, DefaultBasePaths[LookerBasePathKey]))
-	}
-	if d.Get("managed_kafka_custom_endpoint") == "" {
-		d.Set("managed_kafka_custom_endpoint", MultiEnvDefault([]string{
-			"GOOGLE_MANAGED_KAFKA_CUSTOM_ENDPOINT",
-		}, DefaultBasePaths[ManagedKafkaBasePathKey]))
 	}
 	if d.Get("memcache_custom_endpoint") == "" {
 		d.Set("memcache_custom_endpoint", MultiEnvDefault([]string{
@@ -2297,7 +2289,6 @@ func ConfigureBasePaths(c *Config) {
 	c.KMSBasePath = DefaultBasePaths[KMSBasePathKey]
 	c.LoggingBasePath = DefaultBasePaths[LoggingBasePathKey]
 	c.LookerBasePath = DefaultBasePaths[LookerBasePathKey]
-	c.ManagedKafkaBasePath = DefaultBasePaths[ManagedKafkaBasePathKey]
 	c.MemcacheBasePath = DefaultBasePaths[MemcacheBasePathKey]
 	c.MemorystoreBasePath = DefaultBasePaths[MemorystoreBasePathKey]
 	c.MigrationCenterBasePath = DefaultBasePaths[MigrationCenterBasePathKey]

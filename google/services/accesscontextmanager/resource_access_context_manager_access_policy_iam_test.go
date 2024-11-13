@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-google/google/envvar"
 )
 
-func testAccAccessContextManagerAccessPolicyIamBinding(t *testing.T) {
+func TestAccAccessContextManagerAccessPolicyIamBinding(t *testing.T) {
 	acctest.SkipIfVcr(t)
 
 	org := envvar.GetTestOrgFromEnv(t)
@@ -34,7 +34,7 @@ func testAccAccessContextManagerAccessPolicyIamBinding(t *testing.T) {
 	})
 }
 
-func testAccAccessContextManagerAccessPolicyIamMember(t *testing.T) {
+func TestAccAccessContextManagerAccessPolicyIamMember(t *testing.T) {
 	acctest.SkipIfVcr(t)
 
 	org := envvar.GetTestOrgFromEnv(t)
@@ -47,7 +47,7 @@ func testAccAccessContextManagerAccessPolicyIamMember(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// Test IAM Binding creation
-				Config: testAccAccessContextManagerAccessPolicyIamMember_basic(policy, account, role),
+				Config: testAccAccessContextManagerAccessPolicyIamMember(policy, account, role),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						"google_access_context_manager_access_policy_iam_member.member", "role", role),
@@ -59,7 +59,7 @@ func testAccAccessContextManagerAccessPolicyIamMember(t *testing.T) {
 	})
 }
 
-func testAccAccessContextManagerAccessPolicyIamPolicy(t *testing.T) {
+func TestAccAccessContextManagerAccessPolicyIamPolicy(t *testing.T) {
 	acctest.SkipIfVcr(t)
 
 	org := envvar.GetTestOrgFromEnv(t)
@@ -72,7 +72,7 @@ func testAccAccessContextManagerAccessPolicyIamPolicy(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// Test IAM Binding creation
-				Config: testAccAccessContextManagerAccessPolicyIamPolicy_basic(policy, account, role),
+				Config: testAccAccessContextManagerAccessPolicyIamPolicy(policy, account, role),
 			},
 		},
 	})
@@ -95,7 +95,7 @@ resource google_access_context_manager_access_policy_iam_binding binding {
 `, account, role)
 }
 
-func testAccAccessContextManagerAccessPolicyIamMember_basic(policy, account, role string) string {
+func testAccAccessContextManagerAccessPolicyIamMember(policy, account, role string) string {
 	return fmt.Sprintf(policy+`
 resource "google_service_account" "test-account" {
   account_id   = "%s"
@@ -111,7 +111,7 @@ resource google_access_context_manager_access_policy_iam_member member {
 `, account, role)
 }
 
-func testAccAccessContextManagerAccessPolicyIamPolicy_basic(policy, account, role string) string {
+func testAccAccessContextManagerAccessPolicyIamPolicy(policy, account, role string) string {
 	return fmt.Sprintf(policy+`
 resource "google_service_account" "test-account" {
   account_id   = "%s"

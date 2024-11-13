@@ -21,6 +21,8 @@ description: |-
 
 A Managed Service for Apache Kafka topic. Apache Kafka is a trademark owned by the Apache Software Foundation.
 
+~> **Warning:** This resource is in beta, and should be used with the terraform-provider-google-beta provider.
+See [Provider Versions](https://terraform.io/docs/providers/google/guides/provider_versions.html) for more details on beta resources.
 
 
 <div class = "oics-button" style="float: right; margin: 0 0 -15px">
@@ -46,6 +48,8 @@ resource "google_managed_kafka_cluster" "cluster" {
       }
     }
   }
+
+  provider = google-beta
 }
 
 resource "google_managed_kafka_topic" "example" {
@@ -57,9 +61,12 @@ resource "google_managed_kafka_topic" "example" {
   configs = {
     "cleanup.policy" = "compact"
   }
+
+  provider = google-beta
 }
 
 data "google_project" "project" {
+  provider = google-beta
 }
 ```
 

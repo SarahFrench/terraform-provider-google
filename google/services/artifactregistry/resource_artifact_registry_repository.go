@@ -339,25 +339,7 @@ snapshot versions.`,
 									},
 								},
 							},
-							ExactlyOneOf: []string{"remote_repository_config.0.apt_repository", "remote_repository_config.0.docker_repository", "remote_repository_config.0.maven_repository", "remote_repository_config.0.npm_repository", "remote_repository_config.0.python_repository", "remote_repository_config.0.yum_repository", "remote_repository_config.0.common_repository"},
-						},
-						"common_repository": {
-							Type:        schema.TypeList,
-							Optional:    true,
-							ForceNew:    true,
-							Description: `Specific settings for an Artifact Registory remote repository.`,
-							MaxItems:    1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"uri": {
-										Type:        schema.TypeString,
-										Required:    true,
-										ForceNew:    true,
-										Description: `Specific uri to the Artifact Registory repository, e.g. 'projects/UPSTREAM_PROJECT_ID/locations/REGION/repositories/UPSTREAM_REPOSITORY'`,
-									},
-								},
-							},
-							ExactlyOneOf: []string{"remote_repository_config.0.apt_repository", "remote_repository_config.0.docker_repository", "remote_repository_config.0.maven_repository", "remote_repository_config.0.npm_repository", "remote_repository_config.0.python_repository", "remote_repository_config.0.yum_repository", "remote_repository_config.0.common_repository"},
+							ExactlyOneOf: []string{"remote_repository_config.0.apt_repository", "remote_repository_config.0.docker_repository", "remote_repository_config.0.maven_repository", "remote_repository_config.0.npm_repository", "remote_repository_config.0.python_repository", "remote_repository_config.0.yum_repository"},
 						},
 						"description": {
 							Type:        schema.TypeString,
@@ -408,7 +390,7 @@ not be validated.`,
 									},
 								},
 							},
-							ExactlyOneOf: []string{"remote_repository_config.0.apt_repository", "remote_repository_config.0.docker_repository", "remote_repository_config.0.maven_repository", "remote_repository_config.0.npm_repository", "remote_repository_config.0.python_repository", "remote_repository_config.0.yum_repository", "remote_repository_config.0.common_repository"},
+							ExactlyOneOf: []string{"remote_repository_config.0.apt_repository", "remote_repository_config.0.docker_repository", "remote_repository_config.0.maven_repository", "remote_repository_config.0.npm_repository", "remote_repository_config.0.python_repository", "remote_repository_config.0.yum_repository"},
 						},
 						"maven_repository": {
 							Type:        schema.TypeList,
@@ -447,7 +429,7 @@ not be validated.`,
 									},
 								},
 							},
-							ExactlyOneOf: []string{"remote_repository_config.0.apt_repository", "remote_repository_config.0.docker_repository", "remote_repository_config.0.maven_repository", "remote_repository_config.0.npm_repository", "remote_repository_config.0.python_repository", "remote_repository_config.0.yum_repository", "remote_repository_config.0.common_repository"},
+							ExactlyOneOf: []string{"remote_repository_config.0.apt_repository", "remote_repository_config.0.docker_repository", "remote_repository_config.0.maven_repository", "remote_repository_config.0.npm_repository", "remote_repository_config.0.python_repository", "remote_repository_config.0.yum_repository"},
 						},
 						"npm_repository": {
 							Type:        schema.TypeList,
@@ -486,7 +468,7 @@ not be validated.`,
 									},
 								},
 							},
-							ExactlyOneOf: []string{"remote_repository_config.0.apt_repository", "remote_repository_config.0.docker_repository", "remote_repository_config.0.maven_repository", "remote_repository_config.0.npm_repository", "remote_repository_config.0.python_repository", "remote_repository_config.0.yum_repository", "remote_repository_config.0.common_repository"},
+							ExactlyOneOf: []string{"remote_repository_config.0.apt_repository", "remote_repository_config.0.docker_repository", "remote_repository_config.0.maven_repository", "remote_repository_config.0.npm_repository", "remote_repository_config.0.python_repository", "remote_repository_config.0.yum_repository"},
 						},
 						"python_repository": {
 							Type:        schema.TypeList,
@@ -525,7 +507,7 @@ not be validated.`,
 									},
 								},
 							},
-							ExactlyOneOf: []string{"remote_repository_config.0.apt_repository", "remote_repository_config.0.docker_repository", "remote_repository_config.0.maven_repository", "remote_repository_config.0.npm_repository", "remote_repository_config.0.python_repository", "remote_repository_config.0.yum_repository", "remote_repository_config.0.common_repository"},
+							ExactlyOneOf: []string{"remote_repository_config.0.apt_repository", "remote_repository_config.0.docker_repository", "remote_repository_config.0.maven_repository", "remote_repository_config.0.npm_repository", "remote_repository_config.0.python_repository", "remote_repository_config.0.yum_repository"},
 						},
 						"upstream_credentials": {
 							Type:        schema.TypeList,
@@ -597,7 +579,7 @@ remote repository. Must be in the format of
 									},
 								},
 							},
-							ExactlyOneOf: []string{"remote_repository_config.0.apt_repository", "remote_repository_config.0.docker_repository", "remote_repository_config.0.maven_repository", "remote_repository_config.0.npm_repository", "remote_repository_config.0.python_repository", "remote_repository_config.0.yum_repository", "remote_repository_config.0.common_repository"},
+							ExactlyOneOf: []string{"remote_repository_config.0.apt_repository", "remote_repository_config.0.docker_repository", "remote_repository_config.0.maven_repository", "remote_repository_config.0.npm_repository", "remote_repository_config.0.python_repository", "remote_repository_config.0.yum_repository"},
 						},
 					},
 				},
@@ -1425,8 +1407,6 @@ func flattenArtifactRegistryRepositoryRemoteRepositoryConfig(v interface{}, d *s
 		flattenArtifactRegistryRepositoryRemoteRepositoryConfigPythonRepository(original["pythonRepository"], d, config)
 	transformed["yum_repository"] =
 		flattenArtifactRegistryRepositoryRemoteRepositoryConfigYumRepository(original["yumRepository"], d, config)
-	transformed["common_repository"] =
-		flattenArtifactRegistryRepositoryRemoteRepositoryConfigCommonRepository(original["commonRepository"], d, config)
 	transformed["upstream_credentials"] =
 		flattenArtifactRegistryRepositoryRemoteRepositoryConfigUpstreamCredentials(original["upstreamCredentials"], d, config)
 	transformed["disable_upstream_validation"] =
@@ -1666,23 +1646,6 @@ func flattenArtifactRegistryRepositoryRemoteRepositoryConfigYumRepositoryPublicR
 }
 
 func flattenArtifactRegistryRepositoryRemoteRepositoryConfigYumRepositoryPublicRepositoryRepositoryPath(v interface{}, d *schema.ResourceData, config *transport_tpg.Config) interface{} {
-	return v
-}
-
-func flattenArtifactRegistryRepositoryRemoteRepositoryConfigCommonRepository(v interface{}, d *schema.ResourceData, config *transport_tpg.Config) interface{} {
-	if v == nil {
-		return nil
-	}
-	original := v.(map[string]interface{})
-	if len(original) == 0 {
-		return nil
-	}
-	transformed := make(map[string]interface{})
-	transformed["uri"] =
-		flattenArtifactRegistryRepositoryRemoteRepositoryConfigCommonRepositoryUri(original["uri"], d, config)
-	return []interface{}{transformed}
-}
-func flattenArtifactRegistryRepositoryRemoteRepositoryConfigCommonRepositoryUri(v interface{}, d *schema.ResourceData, config *transport_tpg.Config) interface{} {
 	return v
 }
 
@@ -2112,13 +2075,6 @@ func expandArtifactRegistryRepositoryRemoteRepositoryConfig(v interface{}, d tpg
 		transformed["yumRepository"] = transformedYumRepository
 	}
 
-	transformedCommonRepository, err := expandArtifactRegistryRepositoryRemoteRepositoryConfigCommonRepository(original["common_repository"], d, config)
-	if err != nil {
-		return nil, err
-	} else if val := reflect.ValueOf(transformedCommonRepository); val.IsValid() && !tpgresource.IsEmptyValue(val) {
-		transformed["commonRepository"] = transformedCommonRepository
-	}
-
 	transformedUpstreamCredentials, err := expandArtifactRegistryRepositoryRemoteRepositoryConfigUpstreamCredentials(original["upstream_credentials"], d, config)
 	if err != nil {
 		return nil, err
@@ -2455,29 +2411,6 @@ func expandArtifactRegistryRepositoryRemoteRepositoryConfigYumRepositoryPublicRe
 }
 
 func expandArtifactRegistryRepositoryRemoteRepositoryConfigYumRepositoryPublicRepositoryRepositoryPath(v interface{}, d tpgresource.TerraformResourceData, config *transport_tpg.Config) (interface{}, error) {
-	return v, nil
-}
-
-func expandArtifactRegistryRepositoryRemoteRepositoryConfigCommonRepository(v interface{}, d tpgresource.TerraformResourceData, config *transport_tpg.Config) (interface{}, error) {
-	l := v.([]interface{})
-	if len(l) == 0 || l[0] == nil {
-		return nil, nil
-	}
-	raw := l[0]
-	original := raw.(map[string]interface{})
-	transformed := make(map[string]interface{})
-
-	transformedUri, err := expandArtifactRegistryRepositoryRemoteRepositoryConfigCommonRepositoryUri(original["uri"], d, config)
-	if err != nil {
-		return nil, err
-	} else if val := reflect.ValueOf(transformedUri); val.IsValid() && !tpgresource.IsEmptyValue(val) {
-		transformed["uri"] = transformedUri
-	}
-
-	return transformed, nil
-}
-
-func expandArtifactRegistryRepositoryRemoteRepositoryConfigCommonRepositoryUri(v interface{}, d tpgresource.TerraformResourceData, config *transport_tpg.Config) (interface{}, error) {
 	return v, nil
 }
 

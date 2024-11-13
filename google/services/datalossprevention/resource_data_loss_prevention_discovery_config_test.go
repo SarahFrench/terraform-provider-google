@@ -523,7 +523,7 @@ resource "google_tags_tag_key" "tag_key" {
 }
 
 resource "google_tags_tag_value" "tag_value" {
-	parent = google_tags_tag_key.tag_key.id
+	parent = "tagKeys/${google_tags_tag_key.tag_key.name}"
 	short_name = "prod"
 }
 

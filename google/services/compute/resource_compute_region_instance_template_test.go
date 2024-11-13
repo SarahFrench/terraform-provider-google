@@ -3588,12 +3588,12 @@ resource "google_compute_region_instance_template" "foobar" {
     boot         = true
 
     resource_manager_tags = {
-      (google_tags_tag_key.key.id) = google_tags_tag_value.value.id
+      "tagKeys/${google_tags_tag_key.key.name}" = "tagValues/${google_tags_tag_value.value.name}"
     }
   }
 
   resource_manager_tags = {
-    (google_tags_tag_key.key.id) = google_tags_tag_value.value.id
+    "tagKeys/${google_tags_tag_key.key.name}" = "tagValues/${google_tags_tag_value.value.name}"
   }
 
   network_interface {

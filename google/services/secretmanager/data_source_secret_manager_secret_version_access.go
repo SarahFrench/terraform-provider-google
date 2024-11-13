@@ -58,28 +58,19 @@ func dataSourceSecretManagerSecretVersionAccessRead(d *schema.ResourceData, meta
 		return err
 	}
 
-	dSecret, ok := d.Get("secret").(string)
-	if !ok {
-		return fmt.Errorf("wrong type for secret field (%T), expected string", d.Get("secret"))
-	}
-
-	fv, err := tpgresource.ParseProjectFieldValue("secrets", dSecret, "project", d, config, false)
+	fv, err := tpgresource.ParseProjectFieldValue("secrets", d.Get("secret").(string), "project", d, config, false)
 	if err != nil {
 		return err
 	}
-
-	project := fv.Project
-	if dProject, ok := d.Get("project").(string); !ok {
-		return fmt.Errorf("wrong type for project (%T), expected string", d.Get("project"))
-	} else if dProject != "" && dProject != project {
-		return fmt.Errorf("project field value (%s) does not match project of secret (%s).", dProject, project)
+	if d.Get("project").(string) != "" && d.Get("project").(string) != fv.Project {
+		return fmt.Errorf("The project set on this secret version (%s) is not equal to the project where this secret exists (%s).", d.Get("project").(string), fv.Project)
 	}
-
+	project := fv.Project
 	if err := d.Set("project", project); err != nil {
-		return fmt.Errorf("error setting project: %s", err)
+		return fmt.Errorf("Error setting project: %s", err)
 	}
 	if err := d.Set("secret", fv.Name); err != nil {
-		return fmt.Errorf("error setting secret: %s", err)
+		return fmt.Errorf("Error setting secret: %s", err)
 	}
 
 	var url string
@@ -106,29 +97,25 @@ func dataSourceSecretManagerSecretVersionAccessRead(d *schema.ResourceData, meta
 		UserAgent: userAgent,
 	})
 	if err != nil {
-		return fmt.Errorf("error retrieving available secret manager secret version access: %s", err.Error())
+		return fmt.Errorf("Error retrieving available secret manager secret version access: %s", err.Error())
 	}
 
-	nameValue, ok := resp["name"]
-	if !ok {
-		return fmt.Errorf("read response didn't contain critical fields. Read may not have succeeded.")
-	}
-	if err := d.Set("name", nameValue.(string)); err != nil {
-		return fmt.Errorf("error setting name: %s", err)
+	if err := d.Set("name", resp["name"].(string)); err != nil {
+		return fmt.Errorf("Error setting name: %s", err)
 	}
 
 	secretVersionRegex := regexp.MustCompile("projects/(.+)/secrets/(.+)/versions/(.+)$")
 
-	parts := secretVersionRegex.FindStringSubmatch(nameValue.(string))
+	parts := secretVersionRegex.FindStringSubmatch(resp["name"].(string))
 	// should return [full string, project number, secret name, version number]
 	if len(parts) != 4 {
-		return fmt.Errorf("secret name, %s, does not match format, projects/{{project}}/secrets/{{secret}}/versions/{{version}}", nameValue.(string))
+		panic(fmt.Sprintf("secret name, %s, does not match format, projects/{{project}}/secrets/{{secret}}/versions/{{version}}", resp["name"].(string)))
 	}
 
 	log.Printf("[DEBUG] Received Google SecretManager Version: %q", parts[3])
 
 	if err := d.Set("version", parts[3]); err != nil {
-		return fmt.Errorf("error setting version: %s", err)
+		return fmt.Errorf("Error setting version: %s", err)
 	}
 
 	data := resp["payload"].(map[string]interface{})
@@ -143,9 +130,9 @@ func dataSourceSecretManagerSecretVersionAccessRead(d *schema.ResourceData, meta
 		secretData = string(payloadData)
 	}
 	if err := d.Set("secret_data", secretData); err != nil {
-		return fmt.Errorf("error setting secret_data: %s", err)
+		return fmt.Errorf("Error setting secret_data: %s", err)
 	}
 
-	d.SetId(nameValue.(string))
+	d.SetId(resp["name"].(string))
 	return nil
 }

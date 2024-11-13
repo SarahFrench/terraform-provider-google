@@ -18,6 +18,7 @@
 package compute
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"log"
@@ -88,7 +89,7 @@ func InternalIpDiffSuppress(_, old, new string, _ *schema.ResourceData) bool {
 			addr_equality = true
 		} else {
 			// old and new are IP addresses
-			addr_equality = net.IP.Equal(addr_old, addr_new)
+			addr_equality = bytes.Equal(addr_old, addr_new)
 		}
 	}
 
