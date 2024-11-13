@@ -106,6 +106,12 @@ func (p *googleEphemeralServiceAccountAccessToken) Open(ctx context.Context, req
 		return
 	}
 
+	// We skip running Open if values are Unknown
+	// This will only occur during plan, when core sends Unknown values to the ephemeral resource
+	if data.TargetServiceAccount.IsUnknown() || data.Lifetime.IsUnknown() || data.Scopes.IsUnknown() || data.Delegates.IsUnknown() {
+		return
+	}
+
 	if data.Lifetime.IsNull() {
 		data.Lifetime = types.StringValue("3600s")
 	}
