@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -31,6 +32,7 @@ import (
 
 	"golang.org/x/oauth2"
 	googleoauth "golang.org/x/oauth2/google"
+	externalaccount "golang.org/x/oauth2/google/externalaccount"
 	appengine "google.golang.org/api/appengine/v1"
 	"google.golang.org/api/bigquery/v2"
 	"google.golang.org/api/bigtableadmin/v2"
@@ -161,6 +163,18 @@ type ExternalCredentialsHcpTerraform struct {
 	ServiceAccountEmail string
 	JwtIdentityToken    string
 }
+
+var _ externalaccount.SubjectTokenSupplier = ExternalCredentialsHcpTerraform{}
+
+// SubjectToken returns the identity token passed to the provider as an argument from the config.
+// We do not interact with an external system to get a token.
+func (e ExternalCredentialsHcpTerraform) SubjectToken(ctx context.Context, options externalaccount.SupplierOptions) (string, error) {
+	if e.JwtIdentityToken != "" {
+		return e.JwtIdentityToken, nil
+	}
+	return "", errors.New("identity token unavailable in Config when configuring the provider")
+}
+
 func ExpandExternalCredentialsHcpTerraformConfig(v interface{}) (*ExternalCredentialsHcpTerraform, error) {
 	if v == nil {
 		return nil, nil
@@ -1452,9 +1466,34 @@ func (c *Config) LoadAndValidate(ctx context.Context) error {
 
 	c.Context = ctx
 
-	tokenSource, err := c.getTokenSource(c.Scopes, false)
-	if err != nil {
-		return err
+	var tokenSource oauth2.TokenSource
+	var err error
+	if c.ExternalCredentialsHcpTerraform != nil {
+		// Token source is created using external credentials
+		eaConfig := externalaccount.Config{
+			Audience:         c.ExternalCredentialsHcpTerraform.Audience,
+			SubjectTokenType: "urn:ietf:params:oauth:token-type:jwt",
+			// Is ServiceAccountImpersonationURL affected by Universe Domain?
+			ServiceAccountImpersonationURL: fmt.Sprintf("https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateAccessToken", c.ExternalCredentialsHcpTerraform.ServiceAccountEmail),
+			// ServiceAccountImpersonationLifetimeSeconds ??
+			// QuotaProjectID ??
+			Scopes:               c.Scopes,
+			SubjectTokenSupplier: c.ExternalCredentialsHcpTerraform,
+		}
+		// If UniverseDomain is set, the externalaccount package will use it to set the TokenURL (https://sts.UNIVERSE_DOMAIN/v1/token). Otherwise TokenURL defaults to https://sts.googleapis.com/v1/token
+		if c.UniverseDomain != "" {
+			eaConfig.UniverseDomain = c.UniverseDomain
+		}
+		tokenSource, err = externalaccount.NewTokenSource(ctx, eaConfig)
+		if err != nil {
+			return err
+		}
+	} else {
+		// Token source is created using using auth-related inputs
+		tokenSource, err = c.getTokenSource(c.Scopes, false)
+		if err != nil {
+			return err
+		}
 	}
 
 	c.TokenSource = tokenSource
