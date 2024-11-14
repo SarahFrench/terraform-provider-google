@@ -7,6 +7,7 @@ import (
 
 	sdk_schema "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/function"
@@ -78,6 +79,7 @@ func (p *FrameworkProvider) Schema(_ context.Context, _ provider.SchemaRequest, 
 				Validators: []validator.String{
 					stringvalidator.ConflictsWith(path.Expressions{
 						path.MatchRoot("access_token"),
+						path.MatchRoot("external_credentials_hcp_terraform"),
 					}...),
 					CredentialsValidator(),
 					NonEmptyStringValidator(),
@@ -88,6 +90,7 @@ func (p *FrameworkProvider) Schema(_ context.Context, _ provider.SchemaRequest, 
 				Validators: []validator.String{
 					stringvalidator.ConflictsWith(path.Expressions{
 						path.MatchRoot("credentials"),
+						path.MatchRoot("external_credentials_hcp_terraform"),
 					}...),
 					NonEmptyStringValidator(),
 				},
@@ -1002,6 +1005,36 @@ func (p *FrameworkProvider) Schema(_ context.Context, _ provider.SchemaRequest, 
 						},
 						"enable_batching": schema.BoolAttribute{
 							Optional: true,
+						},
+					},
+				},
+			},
+			"external_credentials_hcp_terraform": schema.ListNestedBlock{
+				Validators: []validator.List{
+					listvalidator.ConflictsWith(path.Expressions{
+						path.MatchRoot("access_token"),
+						path.MatchRoot("credentials"),
+					}...),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"audience": schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								NonEmptyStringValidator(),
+							},
+						},
+						"service_account_email": schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								NonEmptyStringValidator(),
+							},
+						},
+						"identity_token": schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								NonEmptyStringValidator(),
+							},
 						},
 					},
 				},

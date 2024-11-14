@@ -39,14 +39,14 @@ func Provider() *schema.Provider {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ValidateFunc:  ValidateCredentials,
-				ConflictsWith: []string{"access_token"},
+				ConflictsWith: []string{"access_token", "external_credentials_hcp_terraform"},
 			},
 
 			"access_token": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ValidateFunc:  ValidateEmptyStrings,
-				ConflictsWith: []string{"credentials"},
+				ConflictsWith: []string{"credentials", "external_credentials_hcp_terraform"},
 			},
 
 			"impersonate_service_account": {
@@ -59,6 +59,29 @@ func Provider() *schema.Provider {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+
+			"external_credentials_hcp_terraform": {
+				Type:          schema.TypeList,
+				MaxItems:      1,
+				Optional:      true,
+				ConflictsWith: []string{"access_token", "credentials"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"audience": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"service_account_email": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"identity_token": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
 			},
 
 			"project": {
