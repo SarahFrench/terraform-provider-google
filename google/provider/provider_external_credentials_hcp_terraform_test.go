@@ -3,6 +3,7 @@
 package provider_test
 
 import (
+	"os"
 	"regexp"
 	"testing"
 
@@ -38,18 +39,27 @@ func TestAccSdkProvider_external_credentials_hcp_terraform(t *testing.T) {
 	}
 }
 
+// TestAccSdkProvider_successfullyUsesRealToken is intended to be run manually by a provider developer.
+// You will need to set up infrastructure for this test (workload pools, and IdPs), and be able to retrieve identity tokens
+// from inside HCP Terraform. This test cannot be run in CI, so it is skipped unless these environment variables are supplied.
 func TestAccSdkProvider_successfullyUsesRealToken(t *testing.T) {
 
-	// token := os.Getenv("TFC_OIDC_IDENTITY_TOKEN")
-	// if token == "" {
-	// 	t.Skip("Skipping test: This test requires an HCP Terraform identity token to be supplied via TFC_OIDC_IDENTITY_TOKEN")
-	// }
+	token := os.Getenv("TFC_OIDC_IDENTITY_TOKEN")
+	audience := os.Getenv("TFC_OIDC_AUDIENCE")
+	serviceAccountEmail := os.Getenv("TFC_OIDC_SERVICE_ACCOUNT_EMAIL")
+	if token == "" || audience == "" || serviceAccountEmail == "" {
+		t.Skip(`Skipping test: This test requires multiple inputs to test HCP Terraform OIDC
+- TFC_OIDC_IDENTITY_TOKEN: an HCP Terraform identity token 
+- TFC_OIDC_AUDIENCE: the full resource name of the Identity Provider used for this test
+- TFC_OIDC_SERVICE_ACCOUNT_EMAIL: a service account email to identify which email should be impersonated via OIDC
+`)
+	}
 
 	rand := acctest.RandString(t, 10)
 	context := map[string]interface{}{
-		"audience":              "//iam.googleapis.com/projects/871647908372/locations/global/workloadIdentityPools/stacks-demo-qiab/providers/stacks-demo-qiab",
-		"service_account_email": "stacks-demo-qiab@hc-terraform-testing.iam.gserviceaccount.com",
-		"identity_token":        "foobar",
+		"audience":              audience,
+		"service_account_email": serviceAccountEmail,
+		"identity_token":        token,
 		"topic_name":            "tf-test-oidc" + rand,
 	}
 
@@ -60,7 +70,7 @@ func TestAccSdkProvider_successfullyUsesRealToken(t *testing.T) {
 			{
 				Config: testAccSdkProvider_successfullyUsesRealToken(context),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.google_provider_config_sdk.default", "external_credentials_hcp_terraform.0.%", "3")),
+					resource.TestCheckResourceAttr("google_pubsub_topic.topic", "name", context["topic_name"].(string))),
 			},
 		},
 	})
@@ -75,7 +85,6 @@ provider "google" {
     identity_token = "%{identity_token}"
   }
 }
-
 # Resource is provisioned using the credentials supplied via external_credentials_hcp_terraform
 resource "google_pubsub_topic" "topic" {
   name = "%{topic_name}"
@@ -258,7 +267,6 @@ provider "google" {
     identity_token = "%{identity_token}"
   }
 }
-
 data "google_provider_config_sdk" "default" {}
 `, context)
 }
@@ -270,8 +278,6 @@ func testAccSdkProvider_external_credentials_hcp_terraform_setFields(context map
 provider "google" {
 %{fields}
 }
-
 data "google_provider_config_sdk" "default" {}
-
 `, context)
 }

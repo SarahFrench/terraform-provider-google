@@ -133,7 +133,7 @@ func dataSourceClientConfigRead(d *schema.ResourceData, meta interface{}) error 
 		val := map[string]interface{}{}
 		val["audience"] = config.ExternalCredentialsHcpTerraform.Audience
 		val["service_account_email"] = config.ExternalCredentialsHcpTerraform.ServiceAccountEmail
-		val["identity_token"] = config.ExternalCredentialsHcpTerraform.JwtIdentityToken
+		val["identity_token"] = config.ExternalCredentialsHcpTerraform.IdentityToken
 
 		v := []interface{}{val}
 		if err := d.Set("external_credentials_hcp_terraform", v); err != nil {

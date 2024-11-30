@@ -161,7 +161,7 @@ func (f *Formatter) Format(entry *logrus.Entry) ([]byte, error) {
 type ExternalCredentialsHcpTerraform struct {
 	Audience            string
 	ServiceAccountEmail string
-	JwtIdentityToken    string
+	IdentityToken       string
 }
 
 var _ externalaccount.SubjectTokenSupplier = ExternalCredentialsHcpTerraform{}
@@ -169,8 +169,8 @@ var _ externalaccount.SubjectTokenSupplier = ExternalCredentialsHcpTerraform{}
 // SubjectToken returns the identity token passed to the provider as an argument from the config.
 // We do not interact with an external system to get a token.
 func (e ExternalCredentialsHcpTerraform) SubjectToken(ctx context.Context, options externalaccount.SupplierOptions) (string, error) {
-	if e.JwtIdentityToken != "" {
-		return e.JwtIdentityToken, nil
+	if e.IdentityToken != "" {
+		return e.IdentityToken, nil
 	}
 	return "", errors.New("identity token unavailable in Config when configuring the provider")
 }
@@ -203,7 +203,7 @@ func ExpandExternalCredentialsHcpTerraformConfig(v interface{}) (*ExternalCreden
 	if !ok || jwt.(string) == "" {
 		return nil, errors.New("missing value for external_credentials_hcp_terraform.identity_token")
 	}
-	config.JwtIdentityToken = jwt.(string)
+	config.IdentityToken = jwt.(string)
 
 	return config, nil
 }
@@ -1466,34 +1466,9 @@ func (c *Config) LoadAndValidate(ctx context.Context) error {
 
 	c.Context = ctx
 
-	var tokenSource oauth2.TokenSource
-	var err error
-	if c.ExternalCredentialsHcpTerraform != nil {
-		// Token source is created using external credentials
-		eaConfig := externalaccount.Config{
-			Audience:         c.ExternalCredentialsHcpTerraform.Audience,
-			SubjectTokenType: "urn:ietf:params:oauth:token-type:jwt",
-			// Is ServiceAccountImpersonationURL affected by Universe Domain?
-			ServiceAccountImpersonationURL: fmt.Sprintf("https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateAccessToken", c.ExternalCredentialsHcpTerraform.ServiceAccountEmail),
-			// ServiceAccountImpersonationLifetimeSeconds ??
-			// QuotaProjectID ??
-			Scopes:               c.Scopes,
-			SubjectTokenSupplier: c.ExternalCredentialsHcpTerraform,
-		}
-		// If UniverseDomain is set, the externalaccount package will use it to set the TokenURL (https://sts.UNIVERSE_DOMAIN/v1/token). Otherwise TokenURL defaults to https://sts.googleapis.com/v1/token
-		if c.UniverseDomain != "" {
-			eaConfig.UniverseDomain = c.UniverseDomain
-		}
-		tokenSource, err = externalaccount.NewTokenSource(ctx, eaConfig)
-		if err != nil {
-			return err
-		}
-	} else {
-		// Token source is created using using auth-related inputs
-		tokenSource, err = c.getTokenSource(c.Scopes, false)
-		if err != nil {
-			return err
-		}
+	tokenSource, err := c.getTokenSource(ctx, c.Scopes, false)
+	if err != nil {
+		return err
 	}
 
 	c.TokenSource = tokenSource
@@ -1610,34 +1585,11 @@ func (c *Config) synchronousTimeout() time.Duration {
 func (c *Config) logGoogleIdentities(ctx context.Context) error {
 	if c.ImpersonateServiceAccount == "" {
 
-		var tokenSource oauth2.TokenSource
-		var err error
-		if c.ExternalCredentialsHcpTerraform != nil {
-			// Token source is created using external credentials
-			eaConfig := externalaccount.Config{
-				Audience:         c.ExternalCredentialsHcpTerraform.Audience,
-				SubjectTokenType: "urn:ietf:params:oauth:token-type:jwt",
-				// Is ServiceAccountImpersonationURL affected by Universe Domain?
-				ServiceAccountImpersonationURL: fmt.Sprintf("https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateAccessToken", c.ExternalCredentialsHcpTerraform.ServiceAccountEmail),
-				// ServiceAccountImpersonationLifetimeSeconds ??
-				// QuotaProjectID ??
-				Scopes:               c.Scopes,
-				SubjectTokenSupplier: c.ExternalCredentialsHcpTerraform,
-			}
-			// If UniverseDomain is set, the externalaccount package will use it to set the TokenURL (https://sts.UNIVERSE_DOMAIN/v1/token). Otherwise TokenURL defaults to https://sts.googleapis.com/v1/token
-			if c.UniverseDomain != "" {
-				eaConfig.UniverseDomain = c.UniverseDomain
-			}
-			tokenSource, err = externalaccount.NewTokenSource(ctx, eaConfig)
-			if err != nil {
-				return err
-			}
-		} else {
-			tokenSource, err = c.getTokenSource(c.Scopes, true)
-			if err != nil {
-				return err
-			}
+		tokenSource, err := c.getTokenSource(ctx, c.Scopes, true)
+		if err != nil {
+			return err
 		}
+
 		c.Client = oauth2.NewClient(c.Context, tokenSource) // c.Client isn't initialised fully when this code is called.
 
 		email, err := GetCurrentUserEmail(c, c.UserAgent)
@@ -1652,34 +1604,11 @@ func (c *Config) logGoogleIdentities(ctx context.Context) error {
 	}
 
 	// Drop Impersonated ClientOption from OAuth2 TokenSource to infer original identity
-	var tokenSource oauth2.TokenSource
-	var err error
-	if c.ExternalCredentialsHcpTerraform != nil {
-		// Token source is created using external credentials
-		eaConfig := externalaccount.Config{
-			Audience:         c.ExternalCredentialsHcpTerraform.Audience,
-			SubjectTokenType: "urn:ietf:params:oauth:token-type:jwt",
-			// Is ServiceAccountImpersonationURL affected by Universe Domain?
-			ServiceAccountImpersonationURL: fmt.Sprintf("https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateAccessToken", c.ExternalCredentialsHcpTerraform.ServiceAccountEmail),
-			// ServiceAccountImpersonationLifetimeSeconds ??
-			// QuotaProjectID ??
-			Scopes:               c.Scopes,
-			SubjectTokenSupplier: c.ExternalCredentialsHcpTerraform,
-		}
-		// If UniverseDomain is set, the externalaccount package will use it to set the TokenURL (https://sts.UNIVERSE_DOMAIN/v1/token). Otherwise TokenURL defaults to https://sts.googleapis.com/v1/token
-		if c.UniverseDomain != "" {
-			eaConfig.UniverseDomain = c.UniverseDomain
-		}
-		tokenSource, err = externalaccount.NewTokenSource(ctx, eaConfig)
-		if err != nil {
-			return err
-		}
-	} else {
-		tokenSource, err = c.getTokenSource(c.Scopes, true)
-		if err != nil {
-			return err
-		}
+	tokenSource, err := c.getTokenSource(ctx, c.Scopes, true)
+	if err != nil {
+		return err
 	}
+
 	c.Client = oauth2.NewClient(c.Context, tokenSource) // c.Client isn't initialised fully when this code is called.
 
 	email, err := GetCurrentUserEmail(c, c.UserAgent)
@@ -1691,31 +1620,10 @@ func (c *Config) logGoogleIdentities(ctx context.Context) error {
 
 	// Add the Impersonated ClientOption back in to the OAuth2 TokenSource
 
-	if c.ExternalCredentialsHcpTerraform != nil {
-		// Token source is created using external credentials
-		eaConfig := externalaccount.Config{
-			Audience:         c.ExternalCredentialsHcpTerraform.Audience,
-			SubjectTokenType: "urn:ietf:params:oauth:token-type:jwt",
-			// Is ServiceAccountImpersonationURL affected by Universe Domain?
-			ServiceAccountImpersonationURL: fmt.Sprintf("https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateAccessToken", c.ExternalCredentialsHcpTerraform.ServiceAccountEmail),
-			// ServiceAccountImpersonationLifetimeSeconds ??
-			// QuotaProjectID ??
-			Scopes:               c.Scopes,
-			SubjectTokenSupplier: c.ExternalCredentialsHcpTerraform,
-		}
-		// If UniverseDomain is set, the externalaccount package will use it to set the TokenURL (https://sts.UNIVERSE_DOMAIN/v1/token). Otherwise TokenURL defaults to https://sts.googleapis.com/v1/token
-		if c.UniverseDomain != "" {
-			eaConfig.UniverseDomain = c.UniverseDomain
-		}
-		tokenSource, err = externalaccount.NewTokenSource(ctx, eaConfig)
-		if err != nil {
-			return err
-		}
-	} else {
-		tokenSource, err = c.getTokenSource(c.Scopes, false)
-		if err != nil {
-			return err
-		}
+	// Token source is created using using credentials/auth_token/ADCs and other related inputs
+	tokenSource, err = c.getTokenSource(ctx, c.Scopes, false)
+	if err != nil {
+		return err
 	}
 	c.Client = oauth2.NewClient(c.Context, tokenSource) // c.Client isn't initialised fully when this code is called.
 
@@ -1724,7 +1632,20 @@ func (c *Config) logGoogleIdentities(ctx context.Context) error {
 
 // Get a TokenSource based on the Google Credentials configured.
 // If initialCredentialsOnly is true, don't follow the impersonation settings and return the initial set of creds.
-func (c *Config) getTokenSource(clientScopes []string, initialCredentialsOnly bool) (oauth2.TokenSource, error) {
+func (c *Config) getTokenSource(ctx context.Context, clientScopes []string, initialCredentialsOnly bool) (oauth2.TokenSource, error) {
+
+	if c.ExternalCredentialsHcpTerraform != nil {
+		// Token source is created using external credentials
+		// Impersonation isn't done here, so ignore use of initialCredentialsOnly bool
+		eaConfig := c.getExternalAccountConfig(clientScopes)
+		tokenSource, err := externalaccount.NewTokenSource(ctx, eaConfig)
+		if err != nil {
+			return nil, err
+		}
+		return tokenSource, nil
+	}
+
+	// If external credentials not used, use credentials/access_token/ADCs
 	creds, err := c.GetCredentials(clientScopes, initialCredentialsOnly)
 	if err != nil {
 		return nil, fmt.Errorf("%s", err)
@@ -2254,6 +2175,26 @@ type StaticTokenSource struct {
 	oauth2.TokenSource
 }
 
+// getExternalAccountConfig returns an external account config that can be used to create a token source
+func (c *Config) getExternalAccountConfig(clientScopes []string) externalaccount.Config {
+	// Token source is created using external credentials
+	eaConfig := externalaccount.Config{
+		Audience:         c.ExternalCredentialsHcpTerraform.Audience,
+		SubjectTokenType: "urn:ietf:params:oauth:token-type:jwt",
+		// Is ServiceAccountImpersonationURL affected by Universe Domain?
+		ServiceAccountImpersonationURL: fmt.Sprintf("https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/%s:generateAccessToken", c.ExternalCredentialsHcpTerraform.ServiceAccountEmail),
+		// ServiceAccountImpersonationLifetimeSeconds ??
+		// QuotaProjectID ??
+		Scopes:               clientScopes,
+		SubjectTokenSupplier: c.ExternalCredentialsHcpTerraform,
+	}
+	// If UniverseDomain is set, the externalaccount package will use it to set the TokenURL (https://sts.UNIVERSE_DOMAIN/v1/token). Otherwise TokenURL defaults to https://sts.googleapis.com/v1/token
+	if c.UniverseDomain != "" {
+		eaConfig.UniverseDomain = c.UniverseDomain
+	}
+	return eaConfig
+}
+
 // Get a set of credentials with a given scope (clientScopes) based on the Config object.
 // If initialCredentialsOnly is true, don't follow the impersonation settings and return the initial set of creds
 // instead.
@@ -2595,4 +2536,12 @@ func GetRegionFromRegionSelfLink(selfLink string) string {
 		}
 	}
 	return selfLink
+}
+
+func GetUniverseDomainFromMeta(meta interface{}) string {
+	config := meta.(*Config)
+	if config.UniverseDomain == "" {
+		return "googleapis.com"
+	}
+	return config.UniverseDomain
 }
