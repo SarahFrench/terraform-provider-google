@@ -22,6 +22,8 @@ type GcsStateStore struct {
 	name string
 }
 
+// Would match existing config that can be set in a backend block
+// I.e. https://developer.hashicorp.com/terraform/language/backend/gcs#configuration-variables
 type GcsStateStoreModel struct {
 	Bucket           types.String `tfsdk:"bucket"`
 	Prefix           types.String `tfsdk:"prefix"`
