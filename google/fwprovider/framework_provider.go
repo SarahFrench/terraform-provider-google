@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-google/google/fwmodels"
 	"github.com/hashicorp/terraform-provider-google/google/fwvalidators"
 	"github.com/hashicorp/terraform-provider-google/google/services/resourcemanager"
+	"github.com/hashicorp/terraform-provider-google/google/state-stores/gcs"
 	"github.com/hashicorp/terraform-provider-google/version"
 
 	transport_tpg "github.com/hashicorp/terraform-provider-google/google/transport"
@@ -34,6 +35,7 @@ var (
 	_ provider.ProviderWithMetaSchema         = &FrameworkProvider{}
 	_ provider.ProviderWithFunctions          = &FrameworkProvider{}
 	_ provider.ProviderWithEphemeralResources = &FrameworkProvider{}
+	_ provider.ProviderWithStateStores        = &FrameworkProvider{}
 )
 
 // New is a helper function to simplify provider server and testing implementation.
@@ -1142,5 +1144,12 @@ func (p *FrameworkProvider) EphemeralResources(_ context.Context) []func() ephem
 		resourcemanager.GoogleEphemeralServiceAccountIdToken,
 		resourcemanager.GoogleEphemeralServiceAccountJwt,
 		resourcemanager.GoogleEphemeralServiceAccountKey,
+	}
+}
+
+// StateStores defines the state storage implementations in the provider.
+func (p *FrameworkProvider) StateStores(_ context.Context) []func() ephemeral.EphemeralResource {
+	return []func() storage.StateStore{
+		gcs.NewGcsStateStore,
 	}
 }
