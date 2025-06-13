@@ -46,7 +46,12 @@ func (d *GcsStateStore) Schema(ctx context.Context, req storage.SchemaRequest, r
 
 	// Defines and returns the schema of the state store
 
-	// Schema would match what's currently configurable though a backend block today
+}
+
+func (d *GcsStateStore) ValidateConfig(context.Context, storage.ValidateConfigRequest, *storage.ValidateConfigResponse) {
+	// Validate config data and raise diagnostic errors and warnings when appropriate
+
+	// All validation is expected to be offline.
 }
 
 func (d *GcsStateStore) Configure(ctx context.Context, req storage.ConfigureRequest, resp *storage.ConfigureResponse) {
