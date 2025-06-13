@@ -76,7 +76,7 @@ func (d *GcsStateStore) Unlock(ctx context.Context, req storage.UnlockRequest, r
 }
 
 // Read a specific state from its location and return that value to core
-func (d *GcsStateStore) ReadState(ctx context.Context, req storage.ReadStateRequest, resp *storage.ReadStateResponse) {
+func (d *GcsStateStore) Read(ctx context.Context, req storage.ReadStateRequest, resp *storage.ReadStateResponse) {
 
 	// Read the file at the location that corresponds to the given state/environment
 	// If missing, return empty state (what diags?)
@@ -84,14 +84,14 @@ func (d *GcsStateStore) ReadState(ctx context.Context, req storage.ReadStateRequ
 }
 
 // Write a state sent from core to the specific state's location
-func (d *GcsStateStore) WriteState(ctx context.Context, req storage.WriteStateRequest, resp *storage.WriteStateResponse) {
+func (d *GcsStateStore) Write(ctx context.Context, req storage.WriteStateRequest, resp *storage.WriteStateResponse) {
 
 	// Create or overwrite the file at the location that corresponds to the given state/environment
 
 }
 
 // List all states that can be managed by this state store
-func (d *GcsStateStore) States(ctx context.Context, req storage.StatesRequest, resp *storage.StatesResponse) {
+func (d *GcsStateStore) GetStates(ctx context.Context, req storage.StatesRequest, resp *storage.StatesResponse) {
 
 	// Return list of all .tfstate files in the bucket at the configured prefix value (i.e location in the bucket)
 
